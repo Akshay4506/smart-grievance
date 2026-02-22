@@ -52,7 +52,17 @@
             box-shadow: var(--shadow-hover);
             border-color: var(--color-primary-hover);
         }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
+
+    <!-- Phase 7 Document Generators -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -108,7 +118,20 @@
     <div class="modal-overlay" id="complaintModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Complaint Details</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 2rem;">
+                    <h3 style="margin: 0;">Complaint Details</h3>
+                    <button class="btn btn-outline"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem;"
+                        onclick="generatePrintPDF()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        Print (PDF)
+                    </button>
+                </div>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
@@ -246,6 +269,7 @@
             window.openModal = (id) => {
                 const c = window.allComplaints.find(x => x._id === id);
                 if (!c) return;
+                window.currentModalComplaintId = id;
 
                 document.getElementById('modalTitle').textContent = c.title || '--';
 

@@ -1408,7 +1408,7 @@
                         ["Category", c.category],
                         ["Severity", c.severity],
                         ["Status", c.status.replace('_', ' ')],
-                        ["Department", c.department || '--'],
+                        ["Department", c.departmentAssigned || '--'],
                         ["Reported By", c.citizenId ? c.citizenId.name : '--'],
                         ["Reported At", new Date(c.createdAt).toLocaleString('en-IN')],
                         ["Resolved At", c.resolvedAt ? new Date(c.resolvedAt).toLocaleString('en-IN') : 'N/A'],

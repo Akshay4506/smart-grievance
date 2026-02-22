@@ -54,6 +54,36 @@
             height: 12px;
             border-radius: 50%;
         }
+
+        .map-filter-toggle {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            color: var(--color-text-main);
+        }
+
+        @media (max-width: 768px) {
+            .map-filter-toggle {
+                display: block;
+            }
+
+            .map-overlay {
+                display: none;
+                top: 4rem;
+            }
+
+            .map-overlay.active {
+                display: block;
+            }
+        }
     </style>
 </head>
 
@@ -73,6 +103,14 @@
     </nav>
 
     <div class="map-container">
+        <button class="map-filter-toggle" id="mapFilterToggle" aria-label="Toggle map filters">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
         <div id="publicMap"></div>
 
         <div class="map-overlay">
@@ -136,6 +174,15 @@
                 if (backLink) {
                     backLink.href = user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html';
                 }
+            }
+
+            // Mobile Filter Menu Toggle
+            const filterToggleBtn = document.getElementById('mapFilterToggle');
+            const mapOverlay = document.querySelector('.map-overlay');
+            if (filterToggleBtn && mapOverlay) {
+                filterToggleBtn.addEventListener('click', () => {
+                    mapOverlay.classList.toggle('active');
+                });
             }
 
             // Initialize map over Central India

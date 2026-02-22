@@ -301,7 +301,7 @@
                 };
 
                 // Fetch public coordinates
-                const res = await fetch('http://localhost:5000/api/complaints/public');
+                const res = await fetch(`${API_URL}/complaints/public`);
                 allGrievances = await res.json();
 
                 // Initial render

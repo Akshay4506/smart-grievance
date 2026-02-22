@@ -1,4 +1,4 @@
-const API_URL = 'https://sg-track-backend.onrender.com/api';
+const API_URL = 'https://sg-track-api.onrender.com/api';
 
 const api = {
     // Get token from localStorage

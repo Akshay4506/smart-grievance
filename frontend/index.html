@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Issue Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 5rem 1.5rem;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--color-text-muted);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .feature-card {
+      text-align: left;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .feature-card p {
+      color: var(--color-text-muted);
+    }
+
+    .btn-glow-login {
+      background-color: transparent;
+      border-color: var(--color-border);
+      color: var(--color-text-main);
+      transition: all 0.2s ease;
+    }
+
+    .btn-glow-login:hover {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        <img src="logo.svg" alt="Logo" class="nav-brand-logo animate-logo">
+        SG Track
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <div class="container hero-content">
+        <h1>Smart Issue Tracker</h1>
+        <p>A unified reporting platform connecting citizens with department officials to resolve community issues
+          rapidly.</p>
+        <div id="portalArea">
+          <div style="display: flex; gap: 2.5rem; justify-content: center; flex-wrap: wrap;">
+            <div class="card" style="text-align: left; width: 100%; max-width: 450px; padding: 2.5rem;">
+              <h3 style="margin-bottom: 1rem; font-size: 1.8rem;">Citizen Portal</h3>
+              <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 1.1rem;">Report issues, track
+                progress, and view resolution updates.</p>
+              <a href="auth_citizen.html" class="btn btn-glow-login"
+                style="width: 100%; justify-content: center; padding: 1rem; font-size: 1.1rem;">Login
+                as
+                Citizen</a>
+            </div>
+            <div class="card" style="text-align: left; width: 100%; max-width: 450px; padding: 2.5rem;">
+              <h3 style="margin-bottom: 1rem; font-size: 1.8rem;">Official Portal</h3>
+              <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 1.1rem;">Manage issues,
+                update deadlines, and resolve tickets.</p>
+              <a href="auth_official.html" class="btn btn-glow-login"
+                style="width: 100%; justify-content: center; padding: 1rem; font-size: 1.1rem;">Login
+                as
+                Official</a>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a href="map.html" style="font-weight: 500; font-size: 0.95rem;">&rarr; View Public Transparency Map</a>
+          </div>
+        </div>
+      </div>
+      </section>
+
+      <div class="container">
+        <div class="features-grid">
+          <div class="card feature-card">
+            <h3>For Citizens</h3>
+            <p>Easily submit issues with visual photos and exact map coordinates. Track the deadline and resolution
+              progress globally.</p>
+          </div>
+          <div class="card feature-card">
+            <h3>For Departments</h3>
+            <p>Smart sorting ensures the right department gets the ticket. Built-in deadlines and simple task boards for
+              officials.</p>
+          </div>
+          <div class="card feature-card">
+            <h3>Open Transparency</h3>
+            <p>The public map gives a clear view of ongoing and resolved issues across the city, fostering
+              transparency.</p>
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="site-footer">
+    &copy; 2026 Smart Issue Tracker. All rights reserved.
+  </footer>
+
+  <script src="api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = api.getUser();
+      const navLinks = document.getElementById('navLinks');
+
+      if (user) {
+        const portalArea = document.getElementById('portalArea');
+        if (portalArea) {
+          portalArea.innerHTML = `<div style="display: flex; gap: 1rem; justify-content: center;"><a href="${user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html'}" class="btn btn-primary">Go to Dashboard</a><a href="map.html" class="btn btn-outline">View Public Map</a></div>`;
+        }
+
+        navLinks.innerHTML = `
+          <a href="${user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html'}">Dashboard</a>
+          <a href="profile.html">Profile</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        `;
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+          e.preventDefault();
+          api.clearAuth();
+        });
+      } else {
+        navLinks.innerHTML = `
+          <a href="map.html">Analytics Map</a>
+        `;
+      }
+    });
+  </script>
+</body>
+
+</html>

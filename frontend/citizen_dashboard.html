@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Dashboard - SG Track</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .complaints-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .complaint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .complaint-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--color-primary-hover);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <img src="logo.svg" alt="Logo" class="nav-brand-logo animate-logo">
+                SG Track
+            </a>
+            <div class="nav-links">
+                <a href="citizen_dashboard.html" style="color: var(--color-text-main); font-weight: 600;">Dashboard</a>
+                <a href="profile.html">Profile</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>My Complaints</h1>
+                <p style="color: var(--color-text-muted);">Track your previously reported civic issues.</p>
+            </div>
+            <a href="citizen_submit.html" class="btn btn-primary">Report New Issue</a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <div style="font-size: 0.875rem; color: var(--color-text-muted); text-transform: uppercase;">Total
+                    Reports</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="card stat-card">
+                <div style="font-size: 0.875rem; color: var(--color-text-muted); text-transform: uppercase;">In Progress
+                </div>
+                <div class="stat-value" id="statProgress">0</div>
+            </div>
+            <div class="card stat-card">
+                <div style="font-size: 0.875rem; color: var(--color-text-muted); text-transform: uppercase;">Resolved
+                </div>
+                <div class="stat-value" id="statResolved" style="color: var(--status-resolved);">0</div>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 1rem;">Recent Activity</h2>
+        <div class="complaints-list" id="complaintsList">
+            <p style="text-align: center; color: var(--color-text-muted); padding: 2rem;">Loading complaints...</p>
+        </div>
+    </main>
+
+    <!-- Complaint Details Modal -->
+    <div class="modal-overlay" id="complaintModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Complaint Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-label">Title</div>
+                        <div class="modal-value" id="modalTitle">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Status</div>
+                        <div class="modal-value">
+                            <span id="modalStatus" class="badge">--</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Department</div>
+                        <div class="modal-value" id="modalDept">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Severity</div>
+                        <div class="modal-value" id="modalSeverity">--</div>
+                    </div>
+                    <div id="modalResolvedBlock" style="display: none;">
+                        <div class="modal-label" style="color: var(--status-healthy);">Resolved At</div>
+                        <div class="modal-value" id="modalResolvedAt" style="font-size: 0.85rem;">--</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <div class="modal-label">Description</div>
+                    <div class="modal-value" id="modalDesc">--</div>
+                </div>
+
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-label">Approximate Address</div>
+                        <div class="modal-value" id="modalAddress">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Pinned Location</div>
+                        <div class="modal-value" id="modalCoords" style="font-family: monospace; font-size: 0.85rem;">--
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modalEvidenceContainer" style="display: none; margin-top: 1.5rem;">
+                    <div class="modal-label">Attached Photos</div>
+                    <div class="modal-gallery" id="modalEvidenceGallery"></div>
+                </div>
+
+                <!-- Phase 5: Comments Section -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                    <div class="modal-label"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span>Discussion Room</span>
+                        <span id="commentCount" class="badge"
+                            style="background: var(--color-background); color: var(--color-text-main);">0</span>
+                    </div>
+
+                    <div id="commentsTimeline"
+                        style="max-height: 250px; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- JS injected comments -->
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newCommentInput" class="form-input"
+                            placeholder="Type a message to the department..." style="margin-bottom: 0;">
+                        <button id="postCommentBtn" class="btn btn-primary" style="padding: 0 1rem; flex-shrink: 0;"
+                            disabled>Send</button>
+                    </div>
+                </div>
+
+                <!-- Phase 5: Citizen Review Section -->
+                <div id="modalReviewContainer"
+                    style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                    <div class="modal-label"
+                        style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Rate & Review</span>
+                        <span id="reviewStatus"
+                            style="font-size: 0.8rem; font-weight: normal; color: var(--color-text-muted);"></span>
+                    </div>
+
+                    <div id="reviewFormArea">
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; font-size: 1.5rem; cursor: pointer;"
+                            id="starRater">
+                            <span data-val="1">☆</span>
+                            <span data-val="2">☆</span>
+                            <span data-val="3">☆</span>
+                            <span data-val="4">☆</span>
+                            <span data-val="5">☆</span>
+                        </div>
+                        <input type="hidden" id="reviewRating" value="0">
+                        <textarea id="reviewFeedback" class="form-input"
+                            placeholder="Any feedback for the department? (Optional)" rows="2"
+                            style="margin-bottom: 0.5rem; resize: vertical;"></textarea>
+                        <button id="submitReviewBtn" class="btn btn-primary"
+                            style="padding: 0.5rem 1rem; font-size: 0.875rem;" disabled>Submit Review</button>
+                    </div>
+
+                    <div id="reviewDisplayArea" style="display: none;">
+                        <div style="color: #fbbf24; font-size: 1.2rem; margin-bottom: 0.5rem;" id="displayStars"></div>
+                        <p id="displayFeedback"
+                            style="font-size: 0.9rem; color: var(--color-text-muted); font-style: italic;"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        &copy; 2026 Smart Issue Tracker. All rights reserved.
+    </footer>
+
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = api.getUser();
+            if (!user || user.role !== 'citizen') {
+                window.location.href = 'auth_citizen.html';
+                return;
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                api.clearAuth();
+            });
+
+            const complaintsList = document.getElementById('complaintsList');
+
+            // Add a global variable to store complaints for the modal
+            window.allComplaints = [];
+
+            // Modal Functions
+            window.openModal = (id) => {
+                const c = window.allComplaints.find(x => x._id === id);
+                if (!c) return;
+
+                document.getElementById('modalTitle').textContent = c.title || '--';
+
+                const statusSpan = document.getElementById('modalStatus');
+                statusSpan.textContent = c.status ? c.status.replace('_', ' ') : '--';
+                statusSpan.className = 'badge';
+                if (c.status === 'IN_PROGRESS') statusSpan.classList.add('badge-progress');
+                else if (c.status === 'RESOLVED') statusSpan.classList.add('badge-resolved');
+                else statusSpan.classList.add('badge-pending');
+
+                const resolvedBlock = document.getElementById('modalResolvedBlock');
+                if (c.status === 'RESOLVED' && c.resolvedAt) {
+                    const rDate = new Date(c.resolvedAt);
+                    document.getElementById('modalResolvedAt').textContent = rDate.toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\//g, '-').toUpperCase();
+                    resolvedBlock.style.display = 'block';
+                } else {
+                    resolvedBlock.style.display = 'none';
+                }
+
+                document.getElementById('modalDept').textContent = c.departmentAssigned || '--';
+                document.getElementById('modalSeverity').textContent = c.severity || '--';
+                document.getElementById('modalDesc').textContent = c.description || '--';
+
+                if (c.location) {
+                    document.getElementById('modalAddress').textContent = c.location.address || '--';
+                    if (c.location.coordinates && c.location.coordinates.length === 2) {
+                        document.getElementById('modalCoords').textContent = `${c.location.coordinates[1].toFixed(4)}, ${c.location.coordinates[0].toFixed(4)}`;
+                    } else {
+                        document.getElementById('modalCoords').textContent = '--';
+                    }
+                } else {
+                    document.getElementById('modalAddress').textContent = '--';
+                    document.getElementById('modalCoords').textContent = '--';
+                }
+
+                const gallery = document.getElementById('modalEvidenceGallery');
+                const evContainer = document.getElementById('modalEvidenceContainer');
+                gallery.innerHTML = '';
+                if (c.evidence && c.evidence.length > 0) {
+                    c.evidence.forEach(base64 => {
+                        const img = document.createElement('img');
+                        img.src = base64;
+                        gallery.appendChild(img);
+                    });
+                    evContainer.style.display = 'block';
+                } else {
+                    evContainer.style.display = 'none';
+                }
+
+                // Phase 5: Comments Logic
+                window.renderComments(c);
+
+                window.currentOpenTicketId = id;
+                document.getElementById('postCommentBtn').onclick = () => postComment(c._id);
+                document.getElementById('newCommentInput').onkeyup = (e) => {
+                    if (e.key === 'Enter') postComment(c._id);
+                };
+
+                // Phase 5: Review Logic
+                const revContainer = document.getElementById('modalReviewContainer');
+                const formArea = document.getElementById('reviewFormArea');
+                const displayArea = document.getElementById('reviewDisplayArea');
+
+                // Reset form state explicitly
+                document.getElementById('reviewRating').value = '0';
+                document.getElementById('reviewFeedback').value = '';
+                document.querySelectorAll('#starRater span').forEach(s => s.textContent = '☆');
+
+                if (c.status === 'RESOLVED') {
+                    revContainer.style.display = 'block';
+
+                    if (c.review && c.review.rating) {
+                        // Already reviewed
+                        formArea.style.display = 'none';
+                        displayArea.style.display = 'block';
+                        document.getElementById('reviewStatus').textContent = 'Reviewed';
+                        document.getElementById('displayStars').textContent = '★'.repeat(c.review.rating) + '☆'.repeat(5 - c.review.rating);
+                        document.getElementById('displayFeedback').textContent = c.review.feedback ? `"${c.review.feedback}"` : 'No written feedback provided.';
+                    } else {
+                        // Needs Review
+                        formArea.style.display = 'block';
+                        displayArea.style.display = 'none';
+                        document.getElementById('reviewStatus').textContent = 'Pending Review';
+                        document.getElementById('submitReviewBtn').onclick = () => submitReview(c._id);
+                    }
+                } else {
+                    revContainer.style.display = 'none';
+                }
+
+                document.getElementById('complaintModal').classList.add('active');
+            };
+
+            // Interactive Star Rating
+            document.querySelectorAll('#starRater span').forEach(star => {
+                star.addEventListener('click', (e) => {
+                    const val = parseInt(e.target.dataset.val);
+                    document.getElementById('reviewRating').value = val;
+                    document.querySelectorAll('#starRater span').forEach(s => {
+                        s.textContent = parseInt(s.dataset.val) <= val ? '★' : '☆';
+                        s.style.color = parseInt(s.dataset.val) <= val ? '#fbbf24' : 'var(--color-text-main)';
+                    });
+                });
+            });
+
+            // Comments Logic
+            window.renderComments = (ticket) => {
+                const timeline = document.getElementById('commentsTimeline');
+                const count = document.getElementById('commentCount');
+
+                if (!ticket.comments || ticket.comments.length === 0) {
+                    count.textContent = '0';
+                    timeline.innerHTML = `<div style="text-align:center; padding: 1rem; color: var(--color-text-muted); font-style: italic; font-size: 0.85rem;">No comments yet.</div>`;
+                    return;
+                }
+
+                count.textContent = ticket.comments.length;
+                timeline.innerHTML = ticket.comments.map(comment => {
+                    const isSelf = comment.user === user._id;
+                    const bubbleColor = isSelf ? 'var(--color-primary)' : 'var(--color-surface)';
+                    const textColor = isSelf ? '#fff' : 'var(--color-text-main)';
+                    const align = isSelf ? 'flex-end' : 'flex-start';
+                    const dateStr = new Date(comment.createdAt).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\//g, '-').toUpperCase();
+
+                    let displayName = comment.name && comment.name !== 'undefined' ? comment.name : (comment.role === 'official' ? 'Official' : 'Citizen');
+                    if (isSelf) displayName = 'You';
+
+                    return `
+                        <div style="align-self: ${align}; max-width: 80%; display: flex; flex-direction: column; align-items: ${align};">
+                            <span style="font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.1rem; padding: 0 0.25rem;">
+                                ${displayName} (${comment.role}) • ${dateStr}
+                            </span>
+                            <div style="background: ${bubbleColor}; color: ${textColor}; padding: 0.5rem 0.75rem; border-radius: ${isSelf ? '1rem 0.25rem 1rem 1rem' : '0.25rem 1rem 1rem 1rem'}; font-size: 0.9rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
+                                ${comment.text}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Auto scroll to bottom
+                timeline.scrollTop = timeline.scrollHeight;
+            };
+
+            window.postComment = async (id) => {
+                const input = document.getElementById('newCommentInput');
+                const text = input.value.trim();
+
+                if (!text) return;
+                input.disabled = true;
+
+                try {
+                    const newComments = await api.fetchWithAuth(`/complaints/${id}/comments`, {
+                        method: 'POST',
+                        body: JSON.stringify({ text })
+                    });
+
+                    const c = window.allComplaints.find(x => x._id === id);
+                    if (c) {
+                        c.comments = newComments;
+                        window.renderComments(c);
+                    }
+                    input.value = '';
+                    document.getElementById('postCommentBtn').disabled = true;
+                } catch (err) {
+                    alert('Failed to post comment: ' + err.message);
+                } finally {
+                    input.disabled = false;
+                    input.focus();
+                }
+            };
+
+            window.submitReview = async (id) => {
+                const rating = document.getElementById('reviewRating').value;
+                const feedback = document.getElementById('reviewFeedback').value;
+
+                if (rating == 0) {
+                    alert('Please select a star rating first.');
+                    return;
+                }
+
+                const btn = document.getElementById('submitReviewBtn');
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+
+                try {
+                    const res = await api.fetchWithAuth(`/complaints/${id}/review`, {
+                        method: 'POST',
+                        body: JSON.stringify({ rating, feedback })
+                    });
+
+                    // Update local cache
+                    const c = window.allComplaints.find(x => x._id === id);
+                    if (c) c.review = res;
+
+                    // Re-render modal to show display state
+                    openModal(id);
+                } catch (err) {
+                    alert('Failed to submit review: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Review';
+                }
+            };
+
+            window.closeModal = () => {
+                document.getElementById('complaintModal').classList.remove('active');
+            };
+
+            // Phase 7: UI Validation Toggles
+            const commentInp = document.getElementById('newCommentInput');
+            const commentBtn = document.getElementById('postCommentBtn');
+            commentInp.addEventListener('input', () => {
+                commentBtn.disabled = commentInp.value.trim().length === 0;
+            });
+
+            const reviewInp = document.getElementById('reviewFeedback');
+            const reviewBtn = document.getElementById('submitReviewBtn');
+            reviewInp.addEventListener('input', () => {
+                reviewBtn.disabled = reviewInp.value.trim().length === 0 && document.getElementById('reviewRating').value == 0;
+            });
+
+            try {
+                let complaints = await api.fetchWithAuth('/complaints/me');
+
+                // Sort descending by most recently updated
+                complaints.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+                window.allComplaints = complaints;
+
+                let active = 0;
+                let resolved = 0;
+
+                if (complaints.length === 0) {
+                    complaintsList.innerHTML = `
+            <div class="card" style="text-align:center; padding: 3rem;">
+              <h3 style="margin-bottom: 1rem;">No reports yet</h3>
+              <p style="color: var(--color-text-muted); margin-bottom: 1.5rem;">Help improve your community by reporting infrastructure issues.</p>
+              <a href="citizen_submit.html" class="btn btn-outline">File First Report</a>
+            </div>
+          `;
+                } else {
+                    complaintsList.innerHTML = '';
+                    complaints.forEach(c => {
+                        if (c.status === 'RESOLVED') resolved++;
+                        else if (c.status === 'IN_PROGRESS') active++;
+
+                        let badgeClass = 'badge-pending';
+                        if (c.status === 'IN_PROGRESS') badgeClass = 'badge-progress';
+                        if (c.status === 'RESOLVED') badgeClass = 'badge-resolved';
+
+                        const dateStr = new Date(c.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+
+                        complaintsList.innerHTML += `
+              <div class="card complaint-item" style="cursor: pointer;" onclick="openModal('${c._id}')">
+                <div>
+                  <div style="display:flex; align-items:center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted); font-family: monospace;">#${c._id.slice(-6).toUpperCase()}</span>
+                    <h3 style="font-size: 1.1rem; margin: 0;">${c.title}</h3>
+                  </div>
+                  <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+                    Assigned to: ${c.departmentAssigned} &bull; Filed: ${dateStr}
+                  </div>
+                </div>
+                <div>
+                  <span class="badge ${badgeClass}">${c.status.replace('_', ' ')}</span>
+                </div>
+              </div>
+            `;
+                    });
+                }
+
+                document.getElementById('statTotal').textContent = complaints.length;
+                document.getElementById('statProgress').textContent = active;
+                document.getElementById('statResolved').textContent = resolved;
+
+            } catch (err) {
+                complaintsList.innerHTML = `<p style="color: var(--status-critical);">${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

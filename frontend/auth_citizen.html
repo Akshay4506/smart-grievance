@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Login - SG Track</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container {
+            min-height: calc(100vh - 64px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .error-msg {
+            color: var(--status-critical);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+        }
+
+        .toggle-link {
+            color: var(--color-primary);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toggle-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container" style="display:flex; justify-content:center;">
+            <a href="index.html" class="nav-brand">
+                <img src="logo.svg" alt="Logo" class="nav-brand-logo">
+                SG Track
+            </a>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="card auth-card">
+            <div class="auth-header">
+                <h1 id="authTitle">Citizen Login</h1>
+                <p id="authSubtitle">Login to report civic issues</p>
+            </div>
+
+            <div id="errorMsg" class="error-msg hidden"></div>
+
+            <form id="authForm">
+                <div id="registerFields" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label" for="name">Full Name</label>
+                        <input type="text" id="name" class="form-input" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="9876543210">
+                    </div>
+                    <input type="hidden" id="role" value="citizen">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email address</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <span id="submitText">Login</span>
+                </button>
+            </form>
+
+            <div class="toggle-text">
+                <span id="toggleQuestion">Don't have a citizen account?</span>
+                <span class="toggle-link" id="toggleModeBtn">Sign up</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        &copy; 2026 Smart Issue Tracker. All rights reserved.
+    </footer>
+
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = api.getUser();
+            if (user) {
+                window.location.href = user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html';
+            }
+
+            let isLogin = true;
+            const form = document.getElementById('authForm');
+            const toggleBtn = document.getElementById('toggleModeBtn');
+
+            toggleBtn.addEventListener('click', () => {
+                isLogin = !isLogin;
+                document.getElementById('registerFields').classList.toggle('hidden', isLogin);
+                document.getElementById('authTitle').textContent = isLogin ? 'Citizen Login' : 'Register as Citizen';
+                document.getElementById('authSubtitle').textContent = isLogin ? 'Login to report civic issues' : 'Sign up to report issues';
+                document.getElementById('submitText').textContent = isLogin ? 'Login' : 'Complete Sign Up';
+                document.getElementById('toggleQuestion').textContent = isLogin ? "Don't have a citizen account?" : "Already have an account?";
+                document.getElementById('toggleModeBtn').textContent = isLogin ? 'Sign up' : 'Login';
+                document.getElementById('errorMsg').classList.add('hidden');
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errorMsg = document.getElementById('errorMsg');
+                errorMsg.classList.add('hidden');
+
+                const payload = {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                    role: 'citizen'
+                };
+
+                if (!isLogin) {
+                    payload.name = document.getElementById('name').value;
+                    payload.phone = document.getElementById('phone').value;
+                }
+
+                try {
+                    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+                    const data = await api.fetchWithAuth(endpoint, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+
+                    api.setAuth(data);
+                    window.location.href = 'citizen_dashboard.html'; // Specific for citizen
+                } catch (err) {
+                    errorMsg.textContent = err.message;
+                    errorMsg.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

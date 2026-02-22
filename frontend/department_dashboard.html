@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Portal - SG Track</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .k-board {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            align-items: flex-start;
+            margin-top: 2rem;
+        }
+
+        .k-column {
+            flex: 1;
+            min-width: 320px;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: calc(100vh - 200px);
+        }
+
+        .k-cards-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.5rem 0.25rem 0.5rem 0.25rem;
+            margin: -0.5rem -0.25rem -0.5rem -0.25rem;
+        }
+
+        /* Custom scrollbar for Kanban */
+        .k-cards-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .k-cards-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .k-cards-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .k-col-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-border);
+            font-weight: 600;
+        }
+
+        .k-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .k-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--color-primary-hover);
+        }
+
+        .k-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .k-id {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .k-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--color-text-main);
+            padding: 0;
+            margin: 0;
+        }
+
+        .k-desc {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .k-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--color-border);
+        }
+
+        .k-sla {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .k-sla.breached {
+            color: var(--status-critical);
+            font-weight: 600;
+        }
+
+        .status-select {
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Phase 7 Document Generators -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <img src="logo.svg" alt="Logo" class="nav-brand-logo animate-logo">
+                SG Admin
+            </a>
+            <div class="nav-links">
+                <a href="map.html">Public Map</a>
+                <a href="profile.html">Profile</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="max-width: 1400px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0;">
+            <div>
+                <h1>Task Board</h1>
+                <p style="color: var(--color-text-muted);">Manage and update statuses for your department's incoming
+                    tickets.</p>
+            </div>
+            <div>
+                <button class="btn btn-outline" onclick="loadComplaints()">Refresh Data</button>
+            </div>
+        </div>
+
+        <!-- Phase 7: Tab Navigation Expanded -->
+        <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--color-border); margin-bottom: 2rem;">
+            <button class="tab-btn" id="tabTickets" onclick="switchTab('tickets')"
+                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-primary); border-bottom: 3px solid var(--color-primary); cursor: pointer; margin-bottom: -2px;">Tickets</button>
+            <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')"
+                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-text-muted); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px;">Analytics</button>
+            <button class="tab-btn" id="tabReports" onclick="switchTab('reports')"
+                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-text-muted); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px;">Reports</button>
+        </div>
+
+        <!-- Phase 5/6: Analytics View -->
+        <div id="analysisView" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2rem;">
+
+                <!-- Time-Series Line Plot -->
+                <div class="k-card"
+                    style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                    <div
+                        style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: var(--color-text-main); margin: 0;">Ticket Trends</h3>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+                            <input type="date" id="dateFilter" class="status-select" onchange="onCalendarChange()"
+                                title="Select cutoff date">
+                            <select id="timeframeFilter" class="status-select" onchange="updateSubFilters()">
+                                <option value="year">Year-wise</option>
+                                <option value="month">Month-wise</option>
+                                <option value="week">Week-wise</option>
+                                <option value="day">Day-wise</option>
+                            </select>
+                            <select id="subTimeframeFilter" class="status-select" onchange="renderTimeSeries()">
+                                <!-- Dynamically populated by JS based on timeframeFilter -->
+                            </select>
+                            <select id="statusFilter" class="status-select" onchange="renderTimeSeries()">
+                                <option value="RECEIVED">Received</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="RESOLVED">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="width: 100%; height: 350px; position: relative;">
+                        <canvas id="timeSeriesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Current Status Bar Chart -->
+                <div class="k-card"
+                    style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                    <h3 style="margin-bottom: 1rem; color: var(--color-text-main); align-self: flex-start;">Current
+                        Status</h3>
+                    <div style="width: 100%; height: 300px; position: relative;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 7: Reports Generation View -->
+        <div id="reportsView" style="display: none;">
+            <div class="k-card" style="padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">Generate Official Reports</h3>
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">Configure your parameters to generate
+                        verifiable data logs for your department's case loads over a given timeframe.</p>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Report
+                            Type</label>
+                        <select id="reportTypeFilter" class="form-input"
+                            style="padding: 0.5rem; min-width: 150px; background: #fff;"
+                            onchange="updateReportSubFilters()">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Select
+                            Period</label>
+                        <select id="reportPeriodFilter" class="form-input"
+                            style="padding: 0.5rem; min-width: 200px; background: #fff;">
+                            <!-- Populated by JS based on Report Type -->
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Output
+                            Format</label>
+                        <select id="reportFormatFilter" class="form-input"
+                            style="padding: 0.5rem; min-width: 150px; background: #fff;">
+                            <option value="pdf">PDF Document</option>
+                            <option value="excel">Excel Data Sheet</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" style="padding: 0.6rem 2rem; margin-bottom: 1px;"
+                        onclick="generateReport()">Generate</button>
+                </div>
+
+                <div id="reportPreviewArea"
+                    style="display: none; border-top: 1px dashed var(--color-border); padding-top: 2rem; margin-top: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span style="font-weight: 600; color: var(--color-success);" id="reportStatusText">✓ Report
+                            Generated Successfully</span>
+                        <a href="#" id="reportDownloadLink" class="btn btn-outline" download="report.pdf">Download
+                            File</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 6: Tickets Kanban View -->
+        <div id="ticketsView" style="display: block;">
+            <div class="k-board" id="kanbanBoard">
+                <!-- Injected via JS -->
+                <p style="padding:2rem;">Loading data...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Complaint Details Modal -->
+    <div class="modal-overlay" id="complaintModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Complaint Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-label">Title</div>
+                        <div class="modal-value" id="modalTitle">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Status</div>
+                        <div class="modal-value">
+                            <span id="modalStatus" class="badge">--</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Severity</div>
+                        <div class="modal-value" id="modalSeverity">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Reported By</div>
+                        <div class="modal-value" id="modalCitizen" style="font-size: 0.85rem;">--</div>
+                    </div>
+                    <div id="modalResolvedBlock" style="display: none;">
+                        <div class="modal-label" style="color: var(--status-healthy);">Resolved At</div>
+                        <div class="modal-value" id="modalResolvedAt" style="font-size: 0.85rem;">--</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <div class="modal-label">Description</div>
+                    <div class="modal-value" id="modalDesc">--</div>
+                </div>
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-label">Approximate Address</div>
+                        <div class="modal-value" id="modalAddress">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Pinned Location</div>
+                        <div class="modal-value" id="modalCoords" style="font-family: monospace; font-size: 0.85rem;">--
+                        </div>
+                    </div>
+                </div>
+                <div id="modalEvidenceContainer" style="display: none; margin-top: 1.5rem;">
+                    <div class="modal-label">Attached Photos</div>
+                    <div class="modal-gallery" id="modalEvidenceGallery"></div>
+                </div>
+
+                <!-- Phase 5: Comments Section -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                    <div class="modal-label"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span>Discussion Room</span>
+                        <span id="commentCount" class="badge"
+                            style="background: var(--color-background); color: var(--color-text-main);">0</span>
+                    </div>
+
+                    <div id="commentsTimeline"
+                        style="max-height: 250px; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- JS injected comments -->
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newCommentInput" class="form-input" placeholder="Reply to citizen..."
+                            style="margin-bottom: 0;">
+                        <button id="postCommentBtn" class="btn btn-primary" style="padding: 0 1rem; flex-shrink: 0;"
+                            disabled>Send</button>
+                    </div>
+                </div>
+
+                <!-- Phase 5: Citizen Review Display -->
+                <div id="modalOfficialReviewContainer"
+                    style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                    <div class="modal-label">Citizen Rating & Review</div>
+                    <div id="officialReviewDisplayArea">
+                        <div style="color: #fbbf24; font-size: 1.2rem; margin-bottom: 0.5rem;"
+                            id="officialDisplayStars">
+                        </div>
+                        <p id="officialDisplayFeedback"
+                            style="font-size: 0.9rem; color: var(--color-text-muted); font-style: italic;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        &copy; 2026 Smart Issue Tracker. All rights reserved.
+    </footer>
+
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = api.getUser();
+
+            if (!user || user.role !== 'official') {
+                window.location.href = 'auth_official.html';
+                return;
+            }
+
+
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                api.clearAuth();
+            });
+
+            // Phase 7: UI Validation Toggles
+            const commentInp = document.getElementById('newCommentInput');
+            const commentBtn = document.getElementById('postCommentBtn');
+            commentInp.addEventListener('input', () => {
+                commentBtn.disabled = commentInp.value.trim().length === 0;
+            });
+
+            window.allComplaints = [];
+
+            window.openModal = (id, event) => {
+                // Prevent modal from opening if they click the status dropdown
+                if (event && event.target.tagName.toLowerCase() === 'select') return;
+
+                const c = window.allComplaints.find(x => x._id === id);
+                if (!c) return;
+
+                document.getElementById('modalTitle').textContent = c.title || '--';
+
+                const statusSpan = document.getElementById('modalStatus');
+                statusSpan.textContent = c.status ? c.status.replace('_', ' ') : '--';
+                statusSpan.className = 'badge';
+                if (c.status === 'IN_PROGRESS') statusSpan.classList.add('badge-progress');
+                else if (c.status === 'RESOLVED') statusSpan.classList.add('badge-resolved');
+                else statusSpan.classList.add('badge-pending');
+
+                const resolvedBlock = document.getElementById('modalResolvedBlock');
+                if (c.status === 'RESOLVED' && c.resolvedAt) {
+                    const rDate = new Date(c.resolvedAt);
+                    document.getElementById('modalResolvedAt').textContent = rDate.toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\//g, '-').toUpperCase();
+                    resolvedBlock.style.display = 'block';
+                } else {
+                    resolvedBlock.style.display = 'none';
+                }
+
+                document.getElementById('modalSeverity').textContent = c.severity || '--';
+
+                if (c.citizenId && c.citizenId.name) {
+                    document.getElementById('modalCitizen').textContent = `${c.citizenId.name}
+
+                        (${c.citizenId.phone})`;
+                }
+
+                else {
+                    document.getElementById('modalCitizen').textContent = '--';
+                }
+
+                document.getElementById('modalDesc').textContent = c.description || '--';
+
+                if (c.location) {
+                    document.getElementById('modalAddress').textContent = c.location.address || '--';
+
+                    if (c.location.coordinates && c.location.coordinates.length === 2) {
+                        document.getElementById('modalCoords').textContent = `${c.location.coordinates[1].toFixed(4)}
+
+                            , ${c.location.coordinates[0].toFixed(4)}
+
+                            `;
+                    }
+
+                    else {
+                        document.getElementById('modalCoords').textContent = '--';
+                    }
+                }
+
+                else {
+                    document.getElementById('modalAddress').textContent = '--';
+                    document.getElementById('modalCoords').textContent = '--';
+                }
+
+                const gallery = document.getElementById('modalEvidenceGallery');
+                const evContainer = document.getElementById('modalEvidenceContainer');
+                gallery.innerHTML = '';
+
+                if (c.evidence && c.evidence.length > 0) {
+                    c.evidence.forEach(base64 => {
+                        const img = document.createElement('img');
+                        img.src = base64;
+                        gallery.appendChild(img);
+                    });
+                    evContainer.style.display = 'block';
+                }
+
+                else {
+                    evContainer.style.display = 'none';
+                }
+
+                // Phase 5: Comments Logic
+                window.renderComments(c);
+                window.currentOpenTicketId = id;
+                document.getElementById('postCommentBtn').onclick = () => postComment(c._id);
+
+                document.getElementById('newCommentInput').onkeyup = (e) => {
+                    if (e.key === 'Enter') postComment(c._id);
+                }
+
+                    ;
+
+                // Phase 5: Official Review Display Logic
+                const revContainer = document.getElementById('modalOfficialReviewContainer');
+                if (c.status === 'RESOLVED' && c.review && c.review.rating) {
+                    revContainer.style.display = 'block';
+                    document.getElementById('officialDisplayStars').textContent = '★'.repeat(c.review.rating) + '☆'.repeat(5 - c.review.rating);
+                    document.getElementById('officialDisplayFeedback').textContent = c.review.feedback ? `"${c.review.feedback}"` : 'No written feedback provided.';
+                } else {
+                    revContainer.style.display = 'none';
+                }
+
+                document.getElementById('complaintModal').classList.add('active');
+            }
+
+                ;
+
+            // Phase 5: Comments Rendering
+            window.renderComments = (ticket) => {
+                const timeline = document.getElementById('commentsTimeline');
+                const count = document.getElementById('commentCount');
+
+                if (!ticket.comments || ticket.comments.length === 0) {
+                    count.textContent = '0';
+                    timeline.innerHTML = `<div style="text-align:center; padding: 1rem; color: var(--color-text-muted); font-style: italic; font-size: 0.85rem;" >No comments yet.</div>`;
+                    return;
+                }
+
+                count.textContent = ticket.comments.length;
+
+                timeline.innerHTML = ticket.comments.map(comment => {
+                    const isSelf = comment.user === user._id;
+                    const bubbleColor = isSelf ? 'var(--color-primary)' : 'var(--color-surface)';
+                    const textColor = isSelf ? '#fff' : 'var(--color-text-main)';
+                    const align = isSelf ? 'flex-end' : 'flex-start';
+
+                    const dateStr = new Date(comment.createdAt).toLocaleString('en-IN', {
+                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+                    }).replace(/\//g, '-').toUpperCase();
+
+                    let fallbackName = 'Citizen';
+                    if (comment.role === 'citizen' && ticket.citizenId && ticket.citizenId.name) fallbackName = ticket.citizenId.name;
+
+                    let displayName = comment.name && comment.name !== 'undefined' ? comment.name : (comment.role === 'official' ? 'Official' : fallbackName);
+                    if (isSelf) displayName = 'You';
+
+                    return ` <div style="align-self: ${align}; max-width: 80%; display: flex; flex-direction: column; align-items: ${align};" > <span style="font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.1rem; padding: 0 0.25rem;" > ${displayName}
+
+                        (${comment.role}) • ${dateStr}
+
+                        </span> <div style="background: ${bubbleColor}; color: ${textColor}; padding: 0.5rem 0.75rem; border-radius: ${isSelf ? '1rem 0.25rem 1rem 1rem' : '0.25rem 1rem 1rem 1rem'}; font-size: 0.9rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);" > ${comment.text}
+
+                        </div> </div> `;
+                }).join('');
+
+                // Auto scroll to bottom
+                timeline.scrollTop = timeline.scrollHeight;
+            }
+
+                ;
+
+            window.postComment = async (id) => {
+                const input = document.getElementById('newCommentInput');
+                const text = input.value.trim();
+
+                if (!text) return;
+                input.disabled = true;
+
+                try {
+                    const newComments = await api.fetchWithAuth(`/complaints/${id}/comments`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            text
+                        })
+                    });
+
+                    const c = window.allComplaints.find(x => x._id === id);
+
+                    if (c) {
+                        c.comments = newComments;
+                        window.renderComments(c);
+                    }
+
+                    input.value = '';
+                    document.getElementById('postCommentBtn').disabled = true; // Re-disable after submit
+                }
+
+                catch (err) {
+                    alert('Failed to post comment: ' + err.message);
+                }
+
+                finally {
+                    input.disabled = false;
+                    input.focus();
+                }
+            }
+
+                ;
+
+            window.closeModal = () => {
+                document.getElementById('complaintModal').classList.remove('active');
+            }
+
+                ;
+
+            window.loadComplaints = async () => {
+                const board = document.getElementById('kanbanBoard');
+
+                try {
+                    let tickets = await api.fetchWithAuth('/complaints/department');
+
+                    // Sort descending by most recently updated
+                    tickets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+                    window.allComplaints = tickets;
+
+                    // Phase 5/6: Render Analytics only if tab is active
+                    const analysisView = document.getElementById('analysisView');
+                    if (analysisView && analysisView.style.display === 'block') {
+                        renderAnalytics();
+                    }
+
+                    // Categorize
+                    const cols = {
+                        PENDING: [],
+                        IN_PROGRESS: [],
+                        RESOLVED: []
+                    }
+
+                        ;
+
+                    tickets.forEach(t => {
+                        if (cols[t.status]) cols[t.status].push(t);
+                    });
+
+                    board.innerHTML = '';
+
+                    const statusConfig = {
+                        PENDING: {
+                            color: 'var(--status-pending)', badge: 'badge-pending'
+                        }
+
+                        ,
+                        IN_PROGRESS: {
+                            color: 'var(--status-progress)', badge: 'badge-progress'
+                        }
+
+                        ,
+                        RESOLVED: {
+                            color: 'var(--status-resolved)', badge: 'badge-resolved'
+                        }
+                    }
+
+                        ;
+
+                    Object.keys(cols).forEach(status => {
+                        let colTitle = status.replace('_', ' ');
+                        colTitle = colTitle.charAt(0) + colTitle.slice(1).toLowerCase(); // Title Case
+                        const conf = statusConfig[status];
+
+                        const emptyState = ` <div style="text-align:center; padding: 2rem 1rem; color: var(--color-text-muted); font-size: 0.9rem; border: 2px dashed var(--color-border); border-radius: var(--radius-md); background: rgba(255,255,255,0.5);" > 🎉 No tickets here ! </div> `;
+
+                        const html = ` <div class="k-column" style="border-top: 4px solid ${conf.color};" > <div class="k-col-header" style="border-bottom: none; margin-bottom: 0.25rem;" > <span style="font-size: 1.05rem; display:flex; align-items:center; gap:0.5rem;" > <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${conf.color}; box-shadow: 0 0 4px ${conf.color};" ></span> ${colTitle}
+
+                        </span> <span class="badge ${conf.badge}" >${cols[status].length}
+
+                        </span> </div> <div class="k-cards-container" > ${cols[status].length > 0 ? cols[status].map(t => generateCard(t)).join('') : emptyState}
+
+                        </div> </div> `;
+                        board.innerHTML += html;
+                    });
+
+                }
+
+                catch (error) {
+                    board.innerHTML = `<p style="padding:2rem; color: var(--status-critical);" >Failed to load tickets: ${error.message}
+
+                </p>`;
+                }
+            }
+
+                ;
+
+            // Phase 6 & 7: Tab Switching
+            window.switchTab = (tab) => {
+                const ticketsBtn = document.getElementById('tabTickets');
+                const analysisBtn = document.getElementById('tabAnalysis');
+                const reportsBtn = document.getElementById('tabReports');
+
+                const ticketsView = document.getElementById('ticketsView');
+                const analysisView = document.getElementById('analysisView');
+                const reportsView = document.getElementById('reportsView');
+
+                const setActiveStyle = (btn) => {
+                    btn.classList.add('active');
+                    btn.style.color = 'var(--color-primary)';
+                    btn.style.borderBottom = '3px solid var(--color-primary)';
+                };
+
+                const setInactiveStyle = (btn) => {
+                    btn.classList.remove('active');
+                    btn.style.color = 'var(--color-text-muted)';
+                    btn.style.borderBottom = '3px solid transparent';
+                };
+
+                if (tab === 'tickets') {
+                    ticketsView.style.display = 'block';
+                    analysisView.style.display = 'none';
+                    reportsView.style.display = 'none';
+
+                    setActiveStyle(ticketsBtn);
+                    setInactiveStyle(analysisBtn);
+                    setInactiveStyle(reportsBtn);
+                } else if (tab === 'analysis') {
+                    ticketsView.style.display = 'none';
+                    analysisView.style.display = 'block';
+                    reportsView.style.display = 'none';
+
+                    setActiveStyle(analysisBtn);
+                    setInactiveStyle(ticketsBtn);
+                    setInactiveStyle(reportsBtn);
+
+                    // Phase 6: Ensure sub-filters and charts are primed when switching tabs
+                    updateSubFilters();
+                    renderAnalytics();
+                } else if (tab === 'reports') {
+                    ticketsView.style.display = 'none';
+                    analysisView.style.display = 'none';
+                    reportsView.style.display = 'block';
+
+                    setActiveStyle(reportsBtn);
+                    setInactiveStyle(ticketsBtn);
+                    setInactiveStyle(analysisBtn);
+
+                    if (document.getElementById('reportPeriodFilter').options.length === 0) {
+                        updateReportSubFilters(); // Initialize dropdowns
+                    }
+                }
+            };
+
+            // Phase 6: Time-Series Chart Rendering
+            let timeChartInstance = null;
+            let statChartInstance = null;
+
+            window.updateSubFilters = () => {
+                const tf = document.getElementById('timeframeFilter').value;
+                const subTf = document.getElementById('subTimeframeFilter');
+                subTf.innerHTML = '';
+
+                if (tf === 'year') {
+                    subTf.innerHTML = `
+                        <option value="yearly">Yearly Basis</option>
+                        <option value="half_yearly">Half Yearly Basis</option>
+                        <option value="quarterly">Quarterly Basis</option>
+                    `;
+                } else if (tf === 'month') {
+                    subTf.innerHTML = `
+                        <option value="monthly">Monthly Basis</option>
+                        <option value="half_monthly">Half Monthly Basis</option>
+                        <option value="weekly">Weekly Basis</option>
+                    `;
+                } else if (tf === 'week') {
+                    subTf.innerHTML = `<option value="weekly">Weekly Basis</option>`;
+                } else if (tf === 'day') {
+                    subTf.innerHTML = `<option value="daily">Day by Day</option>`;
+                }
+
+                renderTimeSeries();
+            };
+
+            window.onCalendarChange = () => {
+                if (document.getElementById('dateFilter').value) {
+                    document.getElementById('timeframeFilter').value = 'day';
+                    updateSubFilters(); // This will auto-trigger renderTimeSeries
+                } else {
+                    renderTimeSeries();
+                }
+            };
+
+            window.renderTimeSeries = () => {
+                const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+                if (timeChartInstance) timeChartInstance.destroy();
+
+                const timeframe = document.getElementById('timeframeFilter').value;
+                const subTimeframe = document.getElementById('subTimeframeFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                const dateFilterValue = document.getElementById('dateFilter').value;
+
+                let tickets = window.allComplaints || [];
+
+                if (statusFilter !== 'RECEIVED') {
+                    tickets = tickets.filter(t => t.status === statusFilter);
+                }
+
+                const refDate = dateFilterValue ? new Date(dateFilterValue) : new Date();
+                const refYear = refDate.getFullYear();
+                const refMonth = refDate.getMonth();
+
+                let labels = [];
+                let dataMap = {};
+
+                const toLocalISODate = (date) => {
+                    const tzOffset = date.getTimezoneOffset() * 60000;
+                    return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+                };
+
+                // Helper to calculate exact week number of year
+                const getWeekNumber = (d) => {
+                    const firstDayOfYear = new Date(d.getFullYear(), 0, 1);
+                    const pastDaysOfYear = (d - firstDayOfYear) / 86400000;
+                    const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                    return weekNum > 52 ? 52 : weekNum;
+                };
+
+                // --- GENERATE X-AXIS BUCKETS BASED ON SUB-FILTERS ---
+                if (timeframe === 'year') {
+                    if (subTimeframe === 'yearly') {
+                        // +/- 5 years from refYear
+                        for (let i = refYear - 5; i <= refYear + 5; i++) {
+                            const key = i.toString();
+                            labels.push(key);
+                            dataMap[key] = 0;
+                        }
+                    } else if (subTimeframe === 'half_yearly') {
+                        labels = ['H1 (Jan-Jun)', 'H2 (Jul-Dec)'];
+                        labels.forEach(l => dataMap[l] = 0);
+                    } else if (subTimeframe === 'quarterly') {
+                        labels = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+                        labels.forEach(l => dataMap[l] = 0);
+                    }
+                }
+                else if (timeframe === 'month') {
+                    if (subTimeframe === 'monthly') {
+                        // All 12 months of refYear
+                        for (let i = 1; i <= 12; i++) {
+                            const key = `${refYear}-${i.toString().padStart(2, '0')}`;
+                            labels.push(key);
+                            dataMap[key] = 0;
+                        }
+                    } else if (subTimeframe === 'half_monthly') {
+                        labels = [`${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (1st-15th)`, `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (16th-End)`];
+                        labels.forEach(l => dataMap[l] = 0);
+                    } else if (subTimeframe === 'weekly') {
+                        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                        labels.forEach(l => dataMap[l] = 0);
+                    }
+                }
+                else if (timeframe === 'week') {
+                    // Week-wise > Weekly basis (Show 7 days of the reference date's week)
+                    const dayOfWeek = refDate.getDay(); // 0 is Sunday
+                    const diff = refDate.getDate() - dayOfWeek;
+                    const sunday = new Date(refYear, refMonth, diff);
+
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + i);
+                        const key = toLocalISODate(d);
+                        labels.push(key);
+                        dataMap[key] = 0;
+                    }
+                }
+                else if (timeframe === 'day') {
+                    // Day by Day: All dates of the selected month
+                    const daysInMonth = new Date(refYear, refMonth + 1, 0).getDate();
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        const d = new Date(refYear, refMonth, i);
+                        const key = toLocalISODate(d);
+                        labels.push(key);
+                        dataMap[key] = 0;
+                    }
+                }
+
+                // --- MAP TICKET DATA TO GENERATED BUCKETS ---
+                tickets.forEach(t => {
+                    const d = new Date(t.createdAt || t.updatedAt || new Date());
+                    let key = null;
+
+                    // Filter processing scope
+                    if (timeframe === 'year') {
+                        if (subTimeframe !== 'yearly' && d.getFullYear() !== refYear) return;
+                    } else if (timeframe === 'month') {
+                        if (d.getFullYear() !== refYear) return;
+                        if (subTimeframe === 'half_monthly' && d.getMonth() !== refMonth) return;
+                    } else if (timeframe === 'week' || timeframe === 'day') {
+                        // Restrict specifically to chosen month+year
+                        if (d.getFullYear() !== refYear || d.getMonth() !== refMonth) return;
+                    }
+
+                    if (timeframe === 'year') {
+                        if (subTimeframe === 'yearly') {
+                            key = d.getFullYear().toString();
+                        } else if (subTimeframe === 'half_yearly') {
+                            const m = d.getMonth() + 1;
+                            key = m <= 6 ? 'H1 (Jan-Jun)' : 'H2 (Jul-Dec)';
+                        } else if (subTimeframe === 'quarterly') {
+                            const m = d.getMonth() + 1;
+                            if (m <= 3) key = 'Q1 (Jan-Mar)';
+                            else if (m <= 6) key = 'Q2 (Apr-Jun)';
+                            else if (m <= 9) key = 'Q3 (Jul-Sep)';
+                            else key = 'Q4 (Oct-Dec)';
+                        }
+                    }
+                    else if (timeframe === 'month') {
+                        if (subTimeframe === 'monthly') {
+                            const m = d.getMonth() + 1;
+                            key = `${refYear}-${m.toString().padStart(2, '0')}`;
+                        } else if (subTimeframe === 'half_monthly') {
+                            const day = d.getDate();
+                            key = day <= 15 ? `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (1st-15th)` : `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (16th-End)`;
+                        } else if (subTimeframe === 'weekly') {
+                            const day = d.getDate();
+                            const w = Math.ceil(day / 7);
+                            key = `Week ${w > 5 ? 5 : w}`;
+                        }
+                    }
+                    else if (timeframe === 'week' || timeframe === 'day') {
+                        key = toLocalISODate(d); // Matches the pre-generated discrete dates
+                    }
+
+                    if (key && dataMap.hasOwnProperty(key)) {
+                        dataMap[key]++;
+                    }
+                });
+
+                const dataPoints = labels.map(l => dataMap[l]);
+
+                // Determine dynamic line color matching Kanban theme
+                let lineColor = '#8b5cf6'; // default purple for Received
+                if (statusFilter === 'PENDING') lineColor = '#f59e0b';
+                else if (statusFilter === 'IN_PROGRESS') lineColor = '#3b82f6';
+                else if (statusFilter === 'RESOLVED') lineColor = '#10b981';
+
+                timeChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `Tickets (${statusFilter})`,
+                            data: dataPoints,
+                            borderColor: lineColor,
+                            backgroundColor: lineColor + '33', // 20% opacity fill
+                            fill: true,
+                            tension: 0.3, // slight curve
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                intersect: false,
+                                callbacks: {
+                                    label: function (context) {
+                                        const statusLabel = document.getElementById('statusFilter').options[document.getElementById('statusFilter').selectedIndex].text;
+                                        return ` ${statusLabel}: ${context.parsed.y}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { display: false }, // Hide Y-axis labels
+                                grid: { drawBorder: false, display: false }
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    autoSkip: true,
+                                    maxTicksLimit: 15
+                                },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            };
+
+            window.renderAnalytics = async () => {
+                try {
+                    // Update Time-Series first (client side)
+                    renderTimeSeries();
+
+                    // Update Status Bar Chart (server side aggregation)
+                    const data = await api.fetchWithAuth('/complaints/analytics');
+                    const statCtx = document.getElementById('statusChart').getContext('2d');
+
+                    if (statChartInstance) statChartInstance.destroy();
+
+                    // Force Fixed Status Labels (Pending, In Progress, Resolved)
+                    const fixedStatuses = ['PENDING', 'IN_PROGRESS', 'RESOLVED'];
+                    const fixedLabels = ['Pending', 'In Progress', 'Resolved'];
+
+                    const fixedData = fixedStatuses.map(status => {
+                        // Find if backend returned a count for this status
+                        const index = data.statuses.labels.indexOf(status);
+                        return index !== -1 ? data.statuses.data[index] : 0;
+                    });
+
+                    const fixedColors = ['#f59e0b', '#3b82f6', '#10b981']; // Orange, Blue, Green
+
+                    statChartInstance = new Chart(statCtx, {
+
+                        type: 'bar',
+                        data: {
+                            labels: fixedLabels,
+                            datasets: [{
+                                label: 'Number of Tickets',
+                                data: fixedData,
+                                backgroundColor: fixedColors,
+                                borderRadius: 6
+                            }]
+                        }
+
+                        ,
+                        options: {
+
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+
+                            ,
+                            scales: {
+                                y: {
+
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    },
+                                    grid: {
+                                        display: false
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                catch (err) {
+                    console.error("Analytics Error:", err);
+                }
+            }
+
+                ;
+
+            const generateCard = (ticket) => {
+                let slaText = 'No SLA';
+                let isBreached = false;
+
+                if (ticket.slaDeadline) {
+                    const dl = new Date(ticket.slaDeadline);
+                    const now = new Date();
+                    const msLeft = dl - now;
+
+                    if (msLeft < 0) {
+                        slaText = 'Breached';
+                        isBreached = true;
+                    }
+
+                    else {
+                        const hrs = Math.floor(msLeft / (1000 * 60 * 60));
+
+                        slaText = `${hrs}
+
+                    h left`;
+                    }
+                }
+
+                // Dropdown to update status
+                const statusDropdown = ` <select class="status-select" onchange="updateStatus('${ticket._id}', this.value)" style="box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid var(--color-border); background: var(--color-background);"${ticket.status === 'RESOLVED' ? 'disabled' : ''}
+
+            > <option value="PENDING"${ticket.status === 'PENDING' ? 'selected' : ''}
+
+            >Pending</option> <option value="IN_PROGRESS"${ticket.status === 'IN_PROGRESS' ? 'selected' : ''}
+
+            >In Progress</option> <option value="RESOLVED"${ticket.status === 'RESOLVED' ? 'selected' : ''}
+
+            >Resolved</option> </select> `;
+
+                let sevColor = 'var(--color-text-muted)';
+                let sevBg = 'var(--color-background)';
+                let sevBorder = 'var(--color-border)';
+
+                if (ticket.severity.toLowerCase() === 'medium') {
+                    sevColor = '#d97706';
+                    sevBg = '#fef3c7';
+                    sevBorder = '#fbbf24';
+                }
+
+                else if (ticket.severity.toLowerCase() === 'high') {
+                    sevColor = '#c2410c';
+                    sevBg = '#ffedd5';
+                    sevBorder = '#fdba74';
+                }
+
+                else if (ticket.severity.toLowerCase() === 'critical') {
+                    sevColor = '#b91c1c';
+                    sevBg = '#fee2e2';
+                    sevBorder = '#fca5a5';
+                }
+
+                return ` <div class="k-card" style="cursor: pointer;" onclick="openModal('${ticket._id}', event)" > <div class="k-card-top" style="align-items: center; margin-bottom: 0.25rem;" > <span class="k-id" style="font-weight: 600; font-size: 0.8rem; color: var(--color-primary);" >#${ticket._id.slice(-6).toUpperCase()}
+
+            </span> ${statusDropdown}
+
+            </div> <h4 class="k-title" style="margin-bottom: 0.25rem;" >${ticket.title}
+
+            </h4> <p class="k-desc" >${ticket.description}
+
+            </p> <div style="font-size:0.75rem; color:var(--color-text-muted); display:flex; gap:0.5rem; margin-top: 0.5rem; align-items:center;" > <span style="display:flex; align-items:center; gap:0.2rem;" >📍 ${ticket.location?.address ? ticket.location.address.split(',')[0] : 'Location N/A'}
+
+            </span> </div> <div class="k-footer" style="margin-top: 0.75rem; padding-top: 0.75rem;" > <span class="badge" style="background:${sevBg}; border:1px solid ${sevBorder}; color:${sevColor};" >${ticket.severity}
+
+            </span> <div class="k-sla ${isBreached && ticket.status !== 'RESOLVED' ? 'breached' : ''}" style="background: var(--color-background); padding: 0.25rem 0.5rem; border-radius: 4px; border: 1px solid var(--color-border);" > ⏱ ${ticket.status === 'RESOLVED' ? 'Done' : slaText}
+
+            </div> </div> </div> `;
+            }
+
+                ;
+
+            // Expose to window for the inline select onchange event
+            window.updateStatus = async (id, newStatus) => {
+                try {
+                    await api.fetchWithAuth(`/complaints/${id}
+
+                    `, {
+
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            status: newStatus
+                        })
+                    });
+                    loadComplaints(); // refresh board
+                }
+
+                catch (err) {
+                    alert('Failed to update status');
+                    loadComplaints(); // reset UI
+                }
+            }
+
+                ;
+
+            // Phase 7: Dynamic Report Filtering Logic
+            window.updateReportSubFilters = () => {
+                const type = document.getElementById('reportTypeFilter').value;
+                const periodSelect = document.getElementById('reportPeriodFilter');
+                periodSelect.innerHTML = '';
+
+                const now = new Date();
+                const currYear = now.getFullYear();
+                const currMonth = now.getMonth();
+
+                if (type === 'yearly') {
+                    // Populate years: Current down to -5 years
+                    for (let i = 0; i < 6; i++) {
+                        const yr = currYear - i;
+                        periodSelect.innerHTML += `<option value="${yr}">${yr}</option>`;
+                    }
+                } else if (type === 'monthly') {
+                    // Populate last 12 months (e.g., "Jan 2026")
+                    for (let i = 0; i < 12; i++) {
+                        const d = new Date(currYear, currMonth - i, 1);
+                        const label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                        const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                        periodSelect.innerHTML += `<option value="${val}">${label}</option>`;
+                    }
+                } else if (type === 'weekly') {
+                    // Populate last 4 weeks (Simplified for MVP UI)
+                    for (let i = 0; i < 4; i++) {
+                        const end = new Date(now.getTime() - (i * 7 * 24 * 60 * 60 * 1000));
+                        const start = new Date(end.getTime() - (6 * 24 * 60 * 60 * 1000));
+
+                        const startStr = start.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                        const endStr = end.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+                        // Value holds ISO start and end range: "2026-02-15_2026-02-21"
+                        const val = `${start.toISOString().split('T')[0]}_${end.toISOString().split('T')[0]}`;
+                        periodSelect.innerHTML += `<option value="${val}">Week of ${startStr} - ${endStr}</option>`;
+                    }
+                }
+            };
+
+            window.generateReport = async () => {
+                const format = document.getElementById('reportFormatFilter').value;
+                const type = document.getElementById('reportTypeFilter').value;
+                const period = document.getElementById('reportPeriodFilter').value;
+                const periodLabel = document.getElementById('reportPeriodFilter').options[document.getElementById('reportPeriodFilter').selectedIndex].text;
+
+                if (!window.allComplaints || window.allComplaints.length === 0) {
+                    alert('No tickets available to generate a report.');
+                    return;
+                }
+
+                // 1. Filter tickets locally based on selected period
+                let filteredData = [];
+                window.allComplaints.forEach(t => {
+                    const tDate = new Date(t.createdAt || t.updatedAt || new Date());
+
+                    if (type === 'yearly') {
+                        if (tDate.getFullYear().toString() === period) filteredData.push(t);
+                    } else if (type === 'monthly') {
+                        const tMonth = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
+                        if (tMonth === period) filteredData.push(t);
+                    } else if (type === 'weekly') {
+                        const [startStr, endStr] = period.split('_');
+                        const startObj = new Date(startStr);
+                        const endObj = new Date(endStr);
+                        endObj.setHours(23, 59, 59, 999); // Include full final day
+                        if (tDate >= startObj && tDate <= endObj) filteredData.push(t);
+                    }
+                });
+
+                if (filteredData.length === 0) {
+                    alert(`No tickets found for ${periodLabel}. Try expanding your search.`);
+                    return;
+                }
+
+                // Sort chronologically (Oldest first)
+                filteredData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+                // 2. Prepare Data Schema for Export
+                const exportData = filteredData.map(t => ({
+                    ID: t._id.slice(-6).toUpperCase(),
+                    Title: t.title,
+                    Status: t.status,
+                    Severity: t.severity,
+                    Date: new Date(t.createdAt).toLocaleDateString('en-IN')
+                }));
+
+                const deptStr = user.department || 'Utility';
+                const filename = `SGTrack_${deptStr}_${format.toUpperCase()}_Report.pdf`;
+
+                const statusText = document.getElementById('reportStatusText');
+                const downloadLink = document.getElementById('reportDownloadLink');
+                const previewArea = document.getElementById('reportPreviewArea');
+
+                try {
+                    if (format === 'pdf') {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+
+                        // Load Logo SVG via Canvas to Base64
+                        const logoImg = new Image();
+                        logoImg.src = 'logo.svg';
+
+                        logoImg.onload = function () {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = logoImg.width || 50; // Fallback size if SVG lacks fixed width
+                            canvas.height = logoImg.height || 50;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(logoImg, 0, 0, canvas.width, canvas.height);
+                            const imgData = canvas.toDataURL('image/png');
+
+                            // Embed Logo (x:14, y:14, w:12, h:12)
+                            doc.addImage(imgData, 'PNG', 14, 14, 12, 12);
+
+                            // Header (Shifted X to 30)
+                            doc.setFontSize(22);
+                            doc.setTextColor(30, 58, 138); // Tailwind Blue 900
+                            doc.text("Smart Grievance Tracking System", 30, 23);
+
+                            // Subtitle
+                            doc.setFontSize(12);
+                            doc.setTextColor(100, 116, 139); // Tailwind Slate 500
+                            doc.text(`Department: ${deptStr.toUpperCase()}`, 14, 34);
+                            doc.text(`Period: ${periodLabel}`, 14, 40);
+                            doc.text(`Total Records: ${filteredData.length}`, 14, 46);
+
+                            // Table
+                            const tableColumn = ["ID", "Title", "Status", "Severity", "Date"];
+                            const tableRows = exportData.map(obj => Object.values(obj));
+
+                            doc.autoTable({
+                                head: [tableColumn],
+                                body: tableRows,
+                                startY: 52,
+                                theme: 'grid',
+                                headStyles: { fillColor: [59, 130, 246] }, // Tailwind Blue 500
+                                styles: { fontSize: 9 }
+                            });
+
+                            // Trigger Download
+                            doc.save(filename);
+
+                            // Show Success UI
+                            statusText.textContent = `✓ PDF Report Generated Successfully (${filteredData.length} records)`;
+                            previewArea.style.display = 'block';
+                            downloadLink.style.display = 'none';
+                        };
+
+                        logoImg.onerror = function () {
+                            console.warn("Logo failed to load for PDF. Proceeding without logo.");
+                            // Fallback Header without logo
+                            doc.setFontSize(22);
+                            doc.setTextColor(30, 58, 138);
+                            doc.text("Smart Grievance Tracking System", 14, 22);
+
+                            doc.setFontSize(12);
+                            doc.setTextColor(100, 116, 139);
+                            doc.text(`Department: ${deptStr.toUpperCase()}`, 14, 32);
+                            doc.text(`Period: ${periodLabel}`, 14, 38);
+                            doc.text(`Total Records: ${filteredData.length}`, 14, 44);
+
+                            const tableColumn = ["ID", "Title", "Status", "Severity", "Date"];
+                            const tableRows = exportData.map(obj => Object.values(obj));
+
+                            doc.autoTable({
+                                head: [tableColumn],
+                                body: tableRows,
+                                startY: 50,
+                                theme: 'grid',
+                                headStyles: { fillColor: [59, 130, 246] },
+                                styles: { fontSize: 9 }
+                            });
+
+                            doc.save(filename);
+                            statusText.textContent = `✓ PDF Report Generated Successfully (${filteredData.length} records)`;
+                            previewArea.style.display = 'block';
+                            downloadLink.style.display = 'none';
+                        };
+
+                    } else if (format === 'excel') {
+                        const worksheet = XLSX.utils.json_to_sheet(exportData);
+                        const workbook = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(workbook, worksheet, "Grievance Report");
+
+                        // Adjust Column Widths
+                        worksheet['!cols'] = [{ wch: 10 }, { wch: 40 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
+
+                        // Trigger Download
+                        XLSX.writeFile(workbook, filename.replace('.pdf', '.xlsx'));
+                    }
+
+                    // Show Success UI
+                    statusText.textContent = `✓ ${format.toUpperCase()} Report Generated Successfully (${filteredData.length} records)`;
+                    previewArea.style.display = 'block';
+                    downloadLink.style.display = 'none'; // Native libs force direct download instead of hyperlink attach
+
+                } catch (err) {
+                    console.error('Report Generation Failed:', err);
+                    alert("Failed to compile report. Ensure the libraries loaded correctly.");
+                }
+            };
+
+            // Initial Load
+            loadComplaints();
+        });
+    </script>
+</body>
+
+</html>

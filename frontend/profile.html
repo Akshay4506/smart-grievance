@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - SG Track</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .profile-container {
+            max-width: 900px;
+            margin: 3rem auto;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .profile-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <img src="logo.svg" alt="Logo" class="nav-brand-logo">
+                SG Track
+            </a>
+            <div class="nav-links">
+                <a href="index.html" id="dashLink">Dashboard</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container profile-container">
+        <div class="card">
+            <div class="profile-header">
+                <h1>Profile Settings</h1>
+                <p style="color: var(--color-text-muted);">Manage your personal information and credentials</p>
+            </div>
+
+            <div id="statusMsg" class="hidden" style="margin-bottom: 1rem; font-weight: 500;"></div>
+
+            <form id="profileForm">
+                <div class="profile-grid">
+                    <!-- Left Column: Personal Info -->
+                    <div>
+                        <h3
+                            style="margin-bottom: 1rem; color: var(--color-primary); font-size: 1.1rem; border-bottom: 2px solid var(--color-surface); padding-bottom: 0.5rem;">
+                            Account Details</h3>
+
+                        <div class="form-group">
+                            <label class="form-label" for="roleDisplay">Role & Department</label>
+                            <input type="text" id="roleDisplay" class="form-input" disabled
+                                style="background:#f1f5f9; color:#94a3b8;">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email address</label>
+                            <input type="email" id="email" class="form-input" disabled
+                                style="background:#f1f5f9; color:#94a3b8;">
+                            <small style="color: var(--color-text-muted);">Email addresses cannot be changed.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="name">Full Name</label>
+                            <input type="text" id="name" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Phone Number</label>
+                            <input type="tel" id="phone" class="form-input">
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Password Security -->
+                    <div>
+                        <h3
+                            style="margin-bottom: 1rem; color: var(--color-primary); font-size: 1.1rem; border-bottom: 2px solid var(--color-surface); padding-bottom: 0.5rem;">
+                            Security</h3>
+
+                        <div class="form-group">
+                            <label class="form-label" for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" class="form-input"
+                                placeholder="Enter current password to make changes">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" class="form-input"
+                                placeholder="Leave blank to keep current">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="form-input"
+                                placeholder="Repeat new password">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem; text-align: right;">
+                    <button type="submit" class="btn btn-primary" id="saveBtn" style="padding: 0.75rem 2rem;">Save All
+                        Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        &copy; 2026 Smart Issue Tracker. All rights reserved.
+    </footer>
+
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = api.getUser();
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('dashLink').href = user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html';
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                api.clearAuth();
+            });
+
+            // Load Profile Data
+            try {
+                const profile = await api.fetchWithAuth('/auth/profile');
+
+                document.getElementById('email').value = profile.email;
+                document.getElementById('name').value = profile.name;
+                document.getElementById('phone').value = profile.phone || '';
+
+                let roleStr = profile.role.charAt(0).toUpperCase() + profile.role.slice(1);
+                if (profile.role === 'official' && profile.department) {
+                    roleStr += ` (${profile.department})`;
+                }
+                document.getElementById('roleDisplay').value = roleStr;
+            } catch (err) {
+                console.error('Failed to load profile', err);
+            }
+
+            // Save Profile Data
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('saveBtn');
+                const msg = document.getElementById('statusMsg');
+
+                btn.disabled = true;
+                btn.textContent = 'Saving...';
+                msg.classList.add('hidden');
+
+                const payload = {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value
+                };
+
+                const currentPwd = document.getElementById('currentPassword').value;
+                const newPwd = document.getElementById('newPassword').value;
+                const confirmPwd = document.getElementById('confirmPassword').value;
+
+                if (newPwd || confirmPwd) {
+                    if (newPwd !== confirmPwd) {
+                        msg.textContent = 'New passwords do not match.';
+                        msg.style.color = 'var(--status-critical)';
+                        msg.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = 'Save All Changes';
+                        return;
+                    }
+                    if (!currentPwd) {
+                        msg.textContent = 'Please enter your current password to set a new one.';
+                        msg.style.color = 'var(--status-critical)';
+                        msg.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = 'Save All Changes';
+                        return;
+                    }
+
+                    payload.currentPassword = currentPwd;
+                    payload.newPassword = newPwd;
+                }
+
+                try {
+                    const updatedUser = await api.fetchWithAuth('/auth/profile', {
+                        method: 'PUT',
+                        body: JSON.stringify(payload)
+                    });
+
+                    api.setAuth(updatedUser); // Update local storage
+
+                    msg.textContent = 'Profile updated successfully!';
+                    msg.style.color = 'var(--status-resolved)';
+                    msg.classList.remove('hidden');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } catch (err) {
+                    msg.textContent = err.message || 'Failed to update profile.';
+                    msg.style.color = 'var(--status-critical)';
+                    msg.classList.remove('hidden');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Save Changes';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

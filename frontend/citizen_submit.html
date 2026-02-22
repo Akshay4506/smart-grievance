@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Issue - SG Track</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        .submit-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .submit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #mapPicker {
+            height: 300px;
+            width: 100%;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border);
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <img src="logo.svg" alt="Logo" class="nav-brand-logo">
+                SG Track
+            </a>
+            <div class="nav-links">
+                <a href="citizen_dashboard.html">Dashboard</a>
+                <a href="profile.html">Profile</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <div style="margin-bottom: 2rem;">
+            <h1>Report Civil Issue</h1>
+            <p style="color: var(--color-text-muted);">Please provide detailed information and pick a location on the
+                map.</p>
+        </div>
+
+        <div class="card">
+            <form id="submitForm">
+                <div class="submit-grid">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label" for="title">Title summary</label>
+                            <input type="text" id="title" class="form-input"
+                                placeholder="E.g., Large pothole near Sector 5 market" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="category">Category</label>
+                            <select id="category" class="form-select" required>
+                                <option value="" disabled selected>Select an issue category</option>
+                                <option value="Electricity">Electricity</option>
+                                <option value="Water">Water / Plumbing</option>
+                                <option value="Roads">Roads / Potholes</option>
+                                <option value="Waste">Waste / Garbage</option>
+                                <option value="General">General / Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="severity">Severity</label>
+                            <select id="severity" class="form-select">
+                                <option value="" selected>Auto-detect (Recommended)</option>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="CRITICAL">Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="description">Detailed Description</label>
+                            <textarea id="description" class="form-textarea" rows="5"
+                                placeholder="Include any landmarks or specific details..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Upload Photos (Optional)</label>
+                            <div id="evidenceBox"
+                                style="border: 2px dashed var(--color-border); padding: 2rem; text-align: center; border-radius: var(--radius-sm); background: var(--color-background); color: var(--color-text-muted); cursor: pointer; transition: background 0.2s;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" style="margin-bottom: 0.5rem; color: var(--color-primary);">
+                                    <path
+                                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z">
+                                    </path>
+                                    <circle cx="12" cy="13" r="3"></circle>
+                                </svg><br>
+                                <span>Click to upload photos</span>
+                            </div>
+                            <input type="file" id="evidenceFile" accept="image/*" multiple style="display: none;">
+                            <div id="previewGallery"
+                                style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label class="form-label" style="margin-bottom: 0;">Location Picker</label>
+                                <button type="button" id="btnLocation" class="btn btn-outline"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem; height: auto;">📍 Use My
+                                    Location</button>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem;">
+                                Click on the map to drop a pin, or use the button to auto-locate.</p>
+                            <div id="mapPicker"></div>
+                        </div>
+
+                        <input type="hidden" id="lat" value="28.6139"> <!-- Default New Delhi -->
+                        <input type="hidden" id="lng" value="77.2090">
+
+                        <div class="form-group">
+                            <label class="form-label" for="address">Approximate Address</label>
+                            <input type="text" id="address" class="form-input" placeholder="E.g., 14 MG Road" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem;">
+                    <a href="citizen_dashboard.html" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        &copy; 2026 Smart Issue Tracker. All rights reserved.
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = api.getUser();
+            if (!user || user.role !== 'citizen') {
+                window.location.href = 'auth_citizen.html';
+                return;
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                api.clearAuth();
+            });
+
+            // Init Leaflet Map Picker (Centered on New Delhi default)
+            const map = L.map('mapPicker').setView([28.6139, 77.2090], 11);
+
+            // File Upload Logic
+            const evidenceBox = document.getElementById('evidenceBox');
+            const evidenceFile = document.getElementById('evidenceFile');
+            const previewGallery = document.getElementById('previewGallery');
+            let evidenceArray = [];
+
+            evidenceBox.addEventListener('click', () => evidenceFile.click());
+
+            const renderGallery = () => {
+                previewGallery.innerHTML = '';
+                evidenceArray.forEach((base64, index) => {
+                    const wrap = document.createElement('div');
+                    wrap.style.position = 'relative';
+                    wrap.style.width = '100px';
+                    wrap.style.height = '100px';
+
+                    const img = document.createElement('img');
+                    img.src = base64;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '6px';
+                    img.style.border = '1px solid var(--color-border)';
+
+                    const rmBtn = document.createElement('button');
+                    rmBtn.innerHTML = '&times;';
+                    rmBtn.style.position = 'absolute';
+                    rmBtn.style.top = '-5px';
+                    rmBtn.style.right = '-5px';
+                    rmBtn.style.background = 'var(--status-critical)';
+                    rmBtn.style.color = 'white';
+                    rmBtn.style.border = 'none';
+                    rmBtn.style.borderRadius = '50%';
+                    rmBtn.style.width = '20px';
+                    rmBtn.style.height = '20px';
+                    rmBtn.style.cursor = 'pointer';
+                    rmBtn.style.display = 'flex';
+                    rmBtn.style.alignItems = 'center';
+                    rmBtn.style.justifyContent = 'center';
+                    rmBtn.style.fontSize = '14px';
+
+                    rmBtn.onclick = (e) => {
+                        e.preventDefault();
+                        evidenceArray.splice(index, 1);
+                        renderGallery();
+                    };
+
+                    wrap.appendChild(img);
+                    wrap.appendChild(rmBtn);
+                    previewGallery.appendChild(wrap);
+                });
+            };
+
+            evidenceFile.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        evidenceArray.push(event.target.result);
+                        renderGallery();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                // Clear input so same file can be selected again if removed
+                evidenceFile.value = '';
+            });
+
+            // Professional Mapbox/OSM tile layer (no neon/dark themes)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            let marker = L.marker([28.6139, 77.2090], { draggable: true }).addTo(map);
+
+            // Utility to update hidden inputs
+            const updateCoords = (latlng) => {
+                document.getElementById('lat').value = latlng.lat;
+                document.getElementById('lng').value = latlng.lng;
+            };
+
+            map.on('click', (e) => {
+                marker.setLatLng(e.latlng);
+                updateCoords(e.latlng);
+            });
+
+            marker.on('dragend', (e) => {
+                updateCoords(e.target.getLatLng());
+            });
+
+            // HTML5 Geolocation Auto-Locator
+            document.getElementById('btnLocation').addEventListener('click', () => {
+                const btn = document.getElementById('btnLocation');
+                const origText = btn.innerHTML;
+                btn.innerHTML = '⏳ Locating...';
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            const newLatLng = new L.LatLng(lat, lng);
+
+                            map.setView(newLatLng, 15);
+                            marker.setLatLng(newLatLng);
+                            updateCoords(newLatLng);
+                            btn.innerHTML = origText;
+                        },
+                        (error) => {
+                            console.error('Error getting location:', error);
+                            alert('Unable to retrieve your location. Check browser permissions.');
+                            btn.innerHTML = origText;
+                        }
+                    );
+                } else {
+                    alert('Geolocation is not supported by this browser.');
+                    btn.innerHTML = origText;
+                }
+            });
+
+            // Handle Submission
+            document.getElementById('submitForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.textContent = 'Analyzing & Sorting...';
+
+                const payload = {
+                    title: document.getElementById('title').value,
+                    category: document.getElementById('category').value,
+                    severity: document.getElementById('severity').value || undefined,
+                    description: document.getElementById('description').value,
+                    address: document.getElementById('address').value,
+                    lat: parseFloat(document.getElementById('lat').value),
+                    lng: parseFloat(document.getElementById('lng').value),
+                    evidence: evidenceArray
+                };
+
+                try {
+                    await api.fetchWithAuth('/complaints', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+
+                    window.location.href = 'citizen_dashboard.html';
+                } catch (err) {
+                    alert(err.message || 'Failed to submit report');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Report';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

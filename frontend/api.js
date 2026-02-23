@@ -42,28 +42,19 @@ const api = {
     },
 
     initNavBar() {
-        const themeBtn = document.getElementById('themeToggleBtn');
-        if (themeBtn) {
-            const updateThemeIcon = () => {
-                themeBtn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
-            };
-            updateThemeIcon();
-            themeBtn.addEventListener('click', () => {
+        const themeCheckbox = document.getElementById('themeToggleCheckbox');
+        if (themeCheckbox) {
+            themeCheckbox.checked = document.documentElement.getAttribute('data-theme') === 'dark';
+            themeCheckbox.addEventListener('change', () => {
                 this.toggleTheme();
-                updateThemeIcon();
             });
         }
 
         const avatarBtn = document.getElementById('profileAvatarBtn');
         const dropdownMenu = document.getElementById('profileDropdownMenu');
-        const user = this.getUser();
 
-        if (avatarBtn && user) {
-            if (user.profilePicture) {
-                avatarBtn.innerHTML = `<img src="${user.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Avatar">`;
-            } else {
-                avatarBtn.textContent = this.getInitials(user.name);
-            }
+        if (avatarBtn) {
+            this.updateAvatarUI();
 
             avatarBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -75,6 +66,17 @@ const api = {
                     dropdownMenu.classList.remove('active');
                 }
             });
+        }
+    },
+    updateAvatarUI() {
+        const avatarBtn = document.getElementById('profileAvatarBtn');
+        const user = this.getUser();
+        if (avatarBtn && user) {
+            if (user.profilePicture) {
+                avatarBtn.innerHTML = `<img src="${user.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" alt="Avatar">`;
+            } else {
+                avatarBtn.textContent = this.getInitials(user.name);
+            }
         }
     },
 

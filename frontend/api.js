@@ -55,19 +55,7 @@ const api = {
         return data;
     },
 
-    // Change Application Language via Google Translate
-    changeLanguage(langCode) {
-        localStorage.setItem('sg_lang', langCode);
-        if (langCode === 'en') {
-            // Clear Google Translate cookies
-            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-            document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + location.hostname + '; path=/;';
-        } else {
-            // Set Google Translate cookie
-            document.cookie = `googtrans=/en/${langCode}; path=/;`;
-        }
-        window.location.reload();
-    }
+
 };
 
 // --- Global Theme & UI Logic ---
@@ -124,46 +112,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Language Selector & Google Translate Injection
-    const langSelect = document.getElementById('appLanguageSelect');
-    const savedLang = localStorage.getItem('sg_lang') || 'en';
 
-    // Set UI dropdown to current language if it exists in DOM
-    if (langSelect) {
-        langSelect.value = savedLang;
-    }
-
-    // If language is not English, inject Google Translate
-    if (savedLang !== 'en') {
-        window.googleTranslateElementInit = function () {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'as,bn,en,gu,hi,kn,ml,mr,or,ta,te',
-                autoDisplay: false
-            }, 'google_translate_element');
-        };
-
-        const gtScript = document.createElement('script');
-        gtScript.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-        document.body.appendChild(gtScript);
-
-        // Hide Google Translate Top Banner & Tooltips
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .goog-te-banner-frame.skiptranslate { display: none !important; } 
-            body { top: 0px !important; position: static !important; }
-            #google_translate_element { display: none !important; }
-            .goog-tooltip { display: none !important; }
-            .goog-tooltip:hover { display: none !important; }
-            .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
-            .skiptranslate { font-size: inherit !important; }
-        `;
-        document.head.appendChild(style);
-
-        // Create invisible placeholder for the widget
-        const gtDiv = document.createElement('div');
-        gtDiv.id = 'google_translate_element';
-        gtDiv.style.display = 'none';
-        document.body.appendChild(gtDiv);
-    }
 });

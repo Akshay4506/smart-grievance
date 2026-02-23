@@ -40,10 +40,19 @@
                 <img src="logo.svg" alt="Logo" class="nav-brand-logo">
                 SG Track
             </a>
-            <div class="nav-links">
-                <a href="citizen_dashboard.html">Dashboard</a>
-                <a href="profile.html">Profile</a>
-                <a href="#" id="logoutBtn">Logout</a>
+            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
+                <button class="theme-toggle" id="themeToggleBtn" title="Toggle Dark Mode">🌙</button>
+                <a href="citizen_dashboard.html"
+                    style="color: var(--color-text-main); font-weight: 600; margin-right: 0.5rem;">Dashboard</a>
+
+                <div class="profile-wrapper" id="profileDropdownWrapper">
+                    <div class="profile-circle" id="profileAvatarBtn">U</div>
+                    <div class="dropdown-menu" id="profileDropdownMenu">
+                        <a href="profile.html" class="dropdown-item">View Profile</a>
+                        <a href="#" id="logoutBtn" class="dropdown-item"
+                            style="color: var(--status-critical);">Logout</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>

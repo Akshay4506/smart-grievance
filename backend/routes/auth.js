@@ -39,6 +39,7 @@ router.post('/register', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 department: user.department,
+                profilePicture: user.profilePicture,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -72,6 +73,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 department: user.department,
+                profilePicture: user.profilePicture,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -106,6 +108,7 @@ router.put('/profile', protect, async (req, res) => {
         if (user) {
             user.name = req.body.name || user.name;
             user.phone = req.body.phone || user.phone;
+            user.profilePicture = req.body.profilePicture || user.profilePicture;
 
             if (req.body.currentPassword && req.body.newPassword) {
                 const isMatch = await user.matchPassword(req.body.currentPassword);
@@ -123,6 +126,7 @@ router.put('/profile', protect, async (req, res) => {
                 email: updatedUser.email,
                 role: updatedUser.role,
                 department: updatedUser.department,
+                profilePicture: updatedUser.profilePicture,
                 token: generateToken(updatedUser._id, updatedUser.role),
             });
         } else {

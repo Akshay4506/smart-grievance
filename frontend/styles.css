@@ -296,6 +296,8 @@ a:hover {
     position: relative;
     display: flex;
     align-items: center;
+    padding-right: 14px;
+    /* Space for the dropdown arrow */
 }
 
 .profile-avatar {
@@ -310,10 +312,27 @@ a:hover {
     border: none;
     cursor: pointer;
     transition: transform 0.2s;
+    position: relative;
+}
+
+.profile-avatar::after {
+    content: "";
+    position: absolute;
+    right: -16px;
+    top: 50%;
+    transform: translateY(-25%);
+    border-top: 5px solid var(--color-text-muted);
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    transition: border-top-color 0.2s;
 }
 
 .profile-avatar:hover {
     transform: scale(1.05);
+}
+
+.profile-avatar:hover::after {
+    border-top-color: var(--color-text-main);
 }
 
 .profile-dropdown-menu {

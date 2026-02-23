@@ -362,6 +362,30 @@ a:hover {
     transform: translateY(0);
 }
 
+.language-selector-container {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0.25rem;
+}
+
+.language-selector-container label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.language-selector-select {
+    width: 100%;
+    padding: 0.25rem;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-background);
+    color: var(--color-text-main);
+    cursor: pointer;
+}
+
 .profile-dropdown-menu a {
     padding: 0.5rem 1rem;
     color: var(--color-text-main);

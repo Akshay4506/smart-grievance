@@ -137,6 +137,7 @@
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
             background: var(--color-surface);
+            color: var(--color-text-main);
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -284,8 +285,7 @@
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                         <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Report
                             Type</label>
-                        <select id="reportTypeFilter" class="form-input"
-                            style="padding: 0.5rem; min-width: 150px; background: #fff;"
+                        <select id="reportTypeFilter" class="form-select" style="padding: 0.5rem; min-width: 150px;"
                             onchange="updateReportSubFilters()">
                             <option value="weekly">Weekly</option>
                             <option value="monthly">Monthly</option>
@@ -296,8 +296,7 @@
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                         <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Select
                             Period</label>
-                        <select id="reportPeriodFilter" class="form-input"
-                            style="padding: 0.5rem; min-width: 200px; background: #fff;">
+                        <select id="reportPeriodFilter" class="form-select" style="padding: 0.5rem; min-width: 200px;">
                             <!-- Populated by JS based on Report Type -->
                         </select>
                     </div>
@@ -305,8 +304,7 @@
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                         <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);">Output
                             Format</label>
-                        <select id="reportFormatFilter" class="form-input"
-                            style="padding: 0.5rem; min-width: 150px; background: #fff;">
+                        <select id="reportFormatFilter" class="form-select" style="padding: 0.5rem; min-width: 150px;">
                             <option value="pdf">PDF Document</option>
                             <option value="excel">Excel Data Sheet</option>
                         </select>
@@ -721,7 +719,7 @@
                         colTitle = colTitle.charAt(0) + colTitle.slice(1).toLowerCase(); // Title Case
                         const conf = statusConfig[status];
 
-                        const emptyState = ` <div style="text-align:center; padding: 2rem 1rem; color: var(--color-text-muted); font-size: 0.9rem; border: 2px dashed var(--color-border); border-radius: var(--radius-md); background: rgba(255,255,255,0.5);" > 🎉 No tickets here ! </div> `;
+                        const emptyState = ` <div style="text-align:center; padding: 2rem 1rem; color: var(--color-text-muted); font-size: 0.9rem; border: 2px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);" > 🎉 No tickets here ! </div> `;
 
                         const html = ` <div class="k-column" style="border-top: 4px solid ${conf.color};" > <div class="k-col-header" style="border-bottom: none; margin-bottom: 0.25rem;" > <span style="font-size: 1.05rem; display:flex; align-items:center; gap:0.5rem;" > <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${conf.color}; box-shadow: 0 0 4px ${conf.color};" ></span> ${colTitle}
 

@@ -186,6 +186,15 @@
           e.preventDefault();
           api.clearAuth();
         });
+
+        const profileBtn = document.getElementById('profileDropdownBtn');
+        const profileMenu = document.getElementById('profileDropdownMenu');
+        if (profileBtn && profileMenu) {
+          profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('active');
+          });
+        }
       } else {
         navLinks.innerHTML = `
           <a href="map.html">Analytics Map</a>

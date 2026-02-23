@@ -73,35 +73,31 @@
                 <img src="logo.svg" alt="Logo" class="nav-brand-logo animate-logo">
                 SG Track
             </a>
-            <div class="nav-links" style="display: flex; align-items: center; gap: 1rem;">
-                <label class="theme-switch" title="Toggle Dark Mode">
-                    <input type="checkbox" id="themeToggleCheckbox">
-                    <span class="theme-slider">
-                        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                    </span>
-                </label>
-                <a href="citizen_dashboard.html"
-                    style="color: var(--color-text-main); font-weight: 600; margin-right: 0.5rem;">Dashboard</a>
-
-                <div class="profile-wrapper" id="profileDropdownWrapper">
-                    <div class="profile-circle" id="profileAvatarBtn">U</div>
-                    <div class="dropdown-menu" id="profileDropdownMenu">
-                        <a href="profile.html" class="dropdown-item">View Profile</a>
-                        <a href="#" id="logoutBtn" class="dropdown-item"
-                            style="color: var(--status-critical);">Logout</a>
+            <div class="nav-links">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+                    <svg id="themeIconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="themeIconMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <a href="citizen_dashboard.html" style="color: var(--color-text-main); font-weight: 600;">Dashboard</a>
+                <div class="profile-dropdown-container">
+                    <button class="profile-avatar" id="profileDropdownBtn">U</button>
+                    <div class="profile-dropdown-menu" id="profileDropdownMenu">
+                        <a href="profile.html">View Profile</a>
+                        <a href="#" id="logoutBtn">Logout</a>
                     </div>
                 </div>
             </div>
@@ -281,6 +277,10 @@
                 window.location.href = 'auth_citizen.html';
                 return;
             }
+
+            const avatarInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+            const profileBtn = document.getElementById('profileDropdownBtn');
+            if (profileBtn) profileBtn.textContent = avatarInitial;
 
             document.getElementById('logoutBtn').addEventListener('click', (e) => {
                 e.preventDefault();

@@ -39,7 +39,6 @@ router.post('/register', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 department: user.department,
-                profilePicture: user.profilePicture,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -73,7 +72,6 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 department: user.department,
-                profilePicture: user.profilePicture,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -90,7 +88,6 @@ router.get('/profile', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
         if (user) {
-            console.log(`[GET /profile] Returning profilePicture length:`, user.profilePicture ? user.profilePicture.length : 'Null');
             res.json(user);
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -104,16 +101,11 @@ router.get('/profile', protect, async (req, res) => {
 // @route   PUT /api/auth/profile
 router.put('/profile', protect, async (req, res) => {
     try {
-        console.log(`[PUT /profile] Incoming req.body.profilePicture length:`, req.body.profilePicture ? req.body.profilePicture.length : 'Missing/Null');
-
         const user = await User.findById(req.user.id);
 
         if (user) {
             user.name = req.body.name || user.name;
             user.phone = req.body.phone || user.phone;
-            user.profilePicture = req.body.profilePicture || user.profilePicture;
-
-            console.log(`[PUT /profile] user.profilePicture length before save:`, user.profilePicture ? user.profilePicture.length : 'Null');
 
             if (req.body.currentPassword && req.body.newPassword) {
                 const isMatch = await user.matchPassword(req.body.currentPassword);
@@ -131,7 +123,6 @@ router.put('/profile', protect, async (req, res) => {
                 email: updatedUser.email,
                 role: updatedUser.role,
                 department: updatedUser.department,
-                profilePicture: updatedUser.profilePicture,
                 token: generateToken(updatedUser._id, updatedUser.role),
             });
         } else {

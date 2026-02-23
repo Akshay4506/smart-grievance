@@ -72,8 +72,28 @@
         <img src="logo.svg" alt="Logo" class="nav-brand-logo animate-logo">
         SG Track
       </a>
-      <div class="nav-links" id="navLinks">
-        <!-- Injected via JS -->
+      <div class="nav-links">
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+          <svg id="themeIconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg id="themeIconMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <div id="navLinks" style="display: flex; gap: 1.5rem; align-items: center;">
+          <!-- Injected via JS -->
+        </div>
       </div>
     </div>
   </nav>
@@ -149,10 +169,17 @@
           portalArea.innerHTML = `<div style="display: flex; gap: 1rem; justify-content: center;"><a href="${user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html'}" class="btn btn-primary">Go to Dashboard</a><a href="map.html" class="btn btn-outline">View Public Map</a></div>`;
         }
 
+        const avatarInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+
         navLinks.innerHTML = `
           <a href="${user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html'}">Dashboard</a>
-          <a href="profile.html">Profile</a>
-          <a href="#" id="logoutBtn">Logout</a>
+          <div class="profile-dropdown-container">
+            <button class="profile-avatar" id="profileDropdownBtn">${avatarInitial}</button>
+            <div class="profile-dropdown-menu" id="profileDropdownMenu">
+              <a href="profile.html">View Profile</a>
+              <a href="#" id="logoutBtn">Logout</a>
+            </div>
+          </div>
         `;
 
         document.getElementById('logoutBtn').addEventListener('click', (e) => {

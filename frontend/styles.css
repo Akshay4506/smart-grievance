@@ -13,13 +13,18 @@
     --color-text-main: #0f172a;
     --color-text-muted: #64748b;
 
-    /* Status Colors (Solid, muted slightly for professional feel) */
+    /* Status Colors */
     --status-pending: #f59e0b;
     --status-pending-bg: #fef3c7;
+    --status-pending-text: #b45309;
+
     --status-progress: #3b82f6;
-    --status-progress-bg: #dbeafe;
+    --status-progress-bg: #eff6ff;
+    --status-progress-text: #1e3a8a;
+
     --status-resolved: #10b981;
-    --status-resolved-bg: #d1fae5;
+    --status-resolved-bg: #ecfdf5;
+    --status-resolved-text: #065f46;
     --status-critical: #ef4444;
 
     /* Softer rounded Layout constraints */
@@ -36,20 +41,27 @@
 }
 
 [data-theme="dark"] {
-    --color-surface: #1e293b;
     --color-background: #0f172a;
+    --color-surface: #1e293b;
     --color-border: #334155;
+    --color-primary: #8b5cf6;
+    --color-primary-hover: #7c3aed;
     --color-text-main: #f8fafc;
-    --color-text-muted: #94a3b8;
-
-    --status-pending-bg: #78350f;
-    --status-progress-bg: #1e3a8a;
-    --status-resolved-bg: #064e3b;
-
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+    --color-text-muted: #cbd5e1;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    --shadow-nav: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    --shadow-nav: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+    /* Dark Mode Status Adjustments for Contrast */
+    --status-pending-bg: #451a03;
+    --status-pending-text: #fcd34d;
+
+    --status-progress-bg: #1e3a8a;
+    --status-progress-text: #bfdbfe;
+
+    --status-resolved-bg: #064e3b;
+    --status-resolved-text: #6ee7b7;
 }
 
 * {
@@ -412,17 +424,17 @@ a:hover {
 
 .badge-pending {
     background: var(--status-pending-bg);
-    color: #b45309;
+    color: var(--status-pending-text);
 }
 
 .badge-progress {
     background: var(--status-progress-bg);
-    color: #1e3a8a;
+    color: var(--status-progress-text);
 }
 
 .badge-resolved {
     background: var(--status-resolved-bg);
-    color: #065f46;
+    color: var(--status-resolved-text);
 }
 
 /* Hidden utility */

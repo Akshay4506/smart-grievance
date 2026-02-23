@@ -723,7 +723,7 @@
 
                         const html = ` <div class="k-column" style="border-top: 4px solid ${conf.color};" > <div class="k-col-header" style="border-bottom: none; margin-bottom: 0.25rem;" > <span style="font-size: 1.05rem; display:flex; align-items:center; gap:0.5rem;" > <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${conf.color}; box-shadow: 0 0 4px ${conf.color};" ></span> ${colTitle}
 
-                        </span> <span class="badge ${conf.badge}" >${cols[status].length}
+                        </span> <span class="badge ${conf.badge}" style="border: 1px solid ${conf.color};" >${cols[status].length}
 
                         </span> </div> <div class="k-cards-container" > ${cols[status].length > 0 ? cols[status].map(t => generateCard(t)).join('') : emptyState}
 
@@ -1117,27 +1117,6 @@
                 ;
 
             const generateCard = (ticket) => {
-                let slaText = 'No SLA';
-                let isBreached = false;
-
-                if (ticket.slaDeadline) {
-                    const dl = new Date(ticket.slaDeadline);
-                    const now = new Date();
-                    const msLeft = dl - now;
-
-                    if (msLeft < 0) {
-                        slaText = 'Breached';
-                        isBreached = true;
-                    }
-
-                    else {
-                        const hrs = Math.floor(msLeft / (1000 * 60 * 60));
-
-                        slaText = `${hrs}
-
-                    h left`;
-                    }
-                }
 
                 // Dropdown to update status
                 const statusDropdown = ` <select class="status-select" onchange="updateStatus('${ticket._id}', this.value)" style="box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid var(--color-border); background: var(--color-background);"${ticket.status === 'RESOLVED' ? 'disabled' : ''}
@@ -1184,9 +1163,7 @@
 
             </span> </div> <div class="k-footer" style="margin-top: 0.75rem; padding-top: 0.75rem;" > <span class="badge" style="background:${sevBg}; border:1px solid ${sevBorder}; color:${sevColor};" >${ticket.severity}
 
-            </span> <div class="k-sla ${isBreached && ticket.status !== 'RESOLVED' ? 'breached' : ''}" style="background: var(--color-background); padding: 0.25rem 0.5rem; border-radius: 4px; border: 1px solid var(--color-border);" > ⏱ ${ticket.status === 'RESOLVED' ? 'Done' : slaText}
-
-            </div> </div> </div> `;
+            </span> </div> </div> `;
             }
 
                 ;

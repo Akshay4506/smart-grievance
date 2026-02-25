@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Run Frontend
+
+npx serve .
+
+*****
+
+Run Backend
+
+node server.js
+
 ## Getting Started
 
 First, run the development server:

@@ -610,6 +610,8 @@
                         ["Status", c.status.replace('_', ' ')],
                         ["Department", c.departmentAssigned || '--'],
                         ["Reported By", user.name || '--'],
+                        ["Email", user.email || '--'],
+                        ["Phone", user.phone || '--'],
                         ["Reported At", new Date(c.createdAt).toLocaleString('en-IN')],
                         ["Resolved At", c.resolvedAt ? new Date(c.resolvedAt).toLocaleString('en-IN') : 'N/A'],
                         ["Address", c.location && c.location.address ? c.location.address : '--'],

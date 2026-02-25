@@ -59,6 +59,18 @@
         .toggle-link:hover {
             text-decoration: underline;
         }
+
+        .auth-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .auth-links .toggle-link {
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -136,6 +148,11 @@
                     <input type="password" id="password" class="form-input" required>
                 </div>
 
+                <div class="auth-links" id="authLinks">
+                    <span class="toggle-link" id="loginMobileToggle">Login with Mobile</span>
+                    <span class="toggle-link" id="forgotPasswordLink">Forgot Password</span>
+                </div>
+
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <span id="submitText">Login</span>
                 </button>
@@ -161,8 +178,37 @@
             }
 
             let isLogin = true;
+            let loginWithMobile = false;
             const form = document.getElementById('authForm');
             const toggleBtn = document.getElementById('toggleModeBtn');
+            const emailInput = document.getElementById('email');
+            const emailLabel = emailInput.previousElementSibling;
+            const authLinksRow = document.getElementById('authLinks');
+            const mobileToggle = document.getElementById('loginMobileToggle');
+            const forgotLink = document.getElementById('forgotPasswordLink');
+
+            mobileToggle.addEventListener('click', () => {
+                loginWithMobile = !loginWithMobile;
+                if (loginWithMobile) {
+                    emailLabel.textContent = 'Phone Number';
+                    emailInput.type = 'tel';
+                    emailInput.placeholder = '9876543210';
+                    emailInput.removeAttribute('required');
+                    mobileToggle.textContent = 'Login with Email';
+                } else {
+                    emailLabel.textContent = 'Email address';
+                    emailInput.type = 'email';
+                    emailInput.placeholder = 'official@gov.in';
+                    emailInput.setAttribute('required', '');
+                    mobileToggle.textContent = 'Login with Mobile';
+                }
+                emailInput.value = '';
+            });
+
+            forgotLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Please contact your administrator or support team to reset your password.');
+            });
 
             toggleBtn.addEventListener('click', () => {
                 isLogin = !isLogin;
@@ -173,6 +219,12 @@
                 document.getElementById('toggleQuestion').textContent = isLogin ? "Don't have an official account?" : "Already have an account?";
                 document.getElementById('toggleModeBtn').textContent = isLogin ? 'Sign up' : 'Login';
                 document.getElementById('errorMsg').classList.add('hidden');
+                // Hide toggle links during signup, show during login
+                authLinksRow.style.display = isLogin ? 'flex' : 'none';
+                // Reset to email mode when switching
+                if (!isLogin && loginWithMobile) {
+                    mobileToggle.click();
+                }
             });
 
             form.addEventListener('submit', async (e) => {
@@ -181,10 +233,15 @@
                 errorMsg.classList.add('hidden');
 
                 const payload = {
-                    email: document.getElementById('email').value,
                     password: document.getElementById('password').value,
                     role: 'official'
                 };
+
+                if (isLogin && loginWithMobile) {
+                    payload.phone = emailInput.value;
+                } else {
+                    payload.email = emailInput.value;
+                }
 
                 if (!isLogin) {
                     payload.name = document.getElementById('name').value;
@@ -200,7 +257,7 @@
                     });
 
                     api.setAuth(data);
-                    window.location.href = 'department_dashboard.html'; // Specific for official
+                    window.location.href = 'department_dashboard.html';
                 } catch (err) {
                     errorMsg.textContent = err.message;
                     errorMsg.classList.remove('hidden');

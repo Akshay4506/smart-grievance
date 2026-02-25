@@ -53,12 +53,14 @@ router.post('/register', async (req, res) => {
 // @route   POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { email, phone, password, role } = req.body;
 
-        const user = await User.findOne({ email });
+        // Build query: search by email or phone
+        const query = email ? { email } : { phone };
+        const user = await User.findOne(query);
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         if (role && user.role !== role) {

@@ -43,6 +43,13 @@
             text-align: center;
         }
 
+        .success-msg {
+            color: var(--status-resolved);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
         .toggle-text {
             text-align: center;
             margin-top: 1.5rem;
@@ -113,6 +120,7 @@
             </div>
 
             <div id="errorMsg" class="error-msg hidden"></div>
+            <div id="successMsg" class="success-msg hidden"></div>
 
             <form id="authForm">
                 <div id="registerFields" class="hidden">
@@ -230,13 +238,13 @@
                             method: 'POST',
                             body: JSON.stringify({ phone: phoneVal })
                         });
+                        alert('Your OTP is: ' + data.otp + ' (In production this would be sent via SMS)');
                         document.getElementById('otpSection').classList.remove('hidden');
                         document.getElementById('loginBtn').style.display = 'none';
                         document.getElementById('errorMsg').classList.add('hidden');
-                        const successDiv = document.getElementById('successMsg') || document.getElementById('errorMsg');
+                        const successDiv = document.getElementById('successMsg');
                         successDiv.textContent = 'OTP sent to ' + phoneVal + '. Check your messages.';
                         successDiv.classList.remove('hidden');
-                        successDiv.style.color = 'var(--status-resolved)';
                         forgotLink._resetPhone = phoneVal;
                         forgotLink._resetMode = 'phone';
                     } catch (err) {
@@ -260,10 +268,9 @@
                         document.getElementById('otpSection').classList.remove('hidden');
                         document.getElementById('loginBtn').style.display = 'none';
                         document.getElementById('errorMsg').classList.add('hidden');
-                        const successDiv = document.getElementById('successMsg') || document.getElementById('errorMsg');
+                        const successDiv = document.getElementById('successMsg');
                         successDiv.textContent = 'OTP sent to ' + emailVal + '. Check your inbox.';
                         successDiv.classList.remove('hidden');
-                        successDiv.style.color = 'var(--status-resolved)';
                         forgotLink._resetEmail = emailVal;
                         forgotLink._resetMode = 'email';
                     } catch (err) {
@@ -276,8 +283,12 @@
 
             document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
                 const otp = document.getElementById('otpInput').value.trim();
+                const errorMsg = document.getElementById('errorMsg');
+                const successMsg = document.getElementById('successMsg');
+                errorMsg.classList.add('hidden');
+                successMsg.classList.add('hidden');
+
                 if (!otp || otp.length !== 6) {
-                    const errorMsg = document.getElementById('errorMsg');
                     errorMsg.textContent = 'Please enter a valid 6-digit OTP.';
                     errorMsg.classList.remove('hidden');
                     return;

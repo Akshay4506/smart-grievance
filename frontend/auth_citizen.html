@@ -163,6 +163,10 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
                     <span id="submitText">Login</span>
                 </button>
+                <div id="loadingIndicator" class="hidden" style="text-align: center; margin-top: 1rem;">
+                    <div class="spinner"></div>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted);">Sending OTP...</p>
+                </div>
             </form>
 
             <div class="toggle-text">
@@ -224,6 +228,10 @@
                         return;
                     }
                     try {
+                        const loadingIndicator = document.getElementById('loadingIndicator');
+                        loadingIndicator.classList.remove('hidden');
+                        forgotLink.style.pointerEvents = 'none';
+
                         const data = await api.fetchWithAuth('/auth/forgot-password', {
                             method: 'POST',
                             body: JSON.stringify({ phone: phoneVal })
@@ -241,6 +249,9 @@
                         const errorMsg = document.getElementById('errorMsg');
                         errorMsg.textContent = err.message;
                         errorMsg.classList.remove('hidden');
+                    } finally {
+                        document.getElementById('loadingIndicator').classList.add('hidden');
+                        forgotLink.style.pointerEvents = 'auto';
                     }
                 } else {
                     // Email mode - send OTP via Nodemailer
@@ -252,6 +263,10 @@
                         return;
                     }
                     try {
+                        const loadingIndicator = document.getElementById('loadingIndicator');
+                        loadingIndicator.classList.remove('hidden');
+                        forgotLink.style.pointerEvents = 'none';
+
                         const data = await api.fetchWithAuth('/auth/forgot-password-email', {
                             method: 'POST',
                             body: JSON.stringify({ email: emailVal })
@@ -268,6 +283,9 @@
                         const errorMsg = document.getElementById('errorMsg');
                         errorMsg.textContent = err.message;
                         errorMsg.classList.remove('hidden');
+                    } finally {
+                        document.getElementById('loadingIndicator').classList.add('hidden');
+                        forgotLink.style.pointerEvents = 'auto';
                     }
                 }
             });

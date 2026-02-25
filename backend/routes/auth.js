@@ -9,15 +9,16 @@ const router = express.Router();
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    port: 465,
+    secure: true, // Port 465 uses SSL
     auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
     },
-    tls: {
-        rejectUnauthorized: false
-    }
+    // Force IPv4 to avoid ENETUNREACH issues on cloud providers
+    family: 4,
+    debug: true,
+    logger: true
 });
 
 // Generate JWT

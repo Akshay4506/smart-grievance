@@ -220,10 +220,13 @@
                             method: 'POST',
                             body: JSON.stringify({ phone: phoneVal })
                         });
-                        alert('Your OTP is: ' + data.otp + ' (In production this would be sent via SMS)');
                         document.getElementById('otpSection').classList.remove('hidden');
                         document.getElementById('loginBtn').style.display = 'none';
                         document.getElementById('errorMsg').classList.add('hidden');
+                        const successDiv = document.getElementById('successMsg') || document.getElementById('errorMsg');
+                        successDiv.textContent = 'OTP sent to ' + phoneVal + '. Check your messages.';
+                        successDiv.classList.remove('hidden');
+                        successDiv.style.color = 'var(--status-resolved)';
                         forgotLink._resetPhone = phoneVal;
                         forgotLink._resetMode = 'phone';
                     } catch (err) {
@@ -249,7 +252,7 @@
                         document.getElementById('loginBtn').style.display = 'none';
                         document.getElementById('errorMsg').classList.add('hidden');
                         const successDiv = document.getElementById('successMsg') || document.getElementById('errorMsg');
-                        successDiv.textContent = '✅ OTP sent to ' + emailVal + '. Check your inbox.';
+                        successDiv.textContent = 'OTP sent to ' + emailVal + '. Check your inbox.';
                         successDiv.classList.remove('hidden');
                         successDiv.style.color = 'var(--status-resolved)';
                         forgotLink._resetEmail = emailVal;

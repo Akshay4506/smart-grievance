@@ -153,7 +153,17 @@
                     <span class="toggle-link" id="forgotPasswordLink">Forgot Password</span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <div id="otpSection" class="hidden" style="margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="otpInput">Enter OTP</label>
+                        <input type="text" id="otpInput" class="form-input" placeholder="Enter 6-digit OTP"
+                            maxlength="6">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" id="verifyOtpBtn">Verify
+                        OTP</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
                     <span id="submitText">Login</span>
                 </button>
             </form>
@@ -205,9 +215,56 @@
                 emailInput.value = '';
             });
 
-            forgotLink.addEventListener('click', (e) => {
+            forgotLink.addEventListener('click', async (e) => {
                 e.preventDefault();
-                alert('Please contact your administrator or support team to reset your password.');
+                if (!loginWithMobile) {
+                    alert('Please contact your administrator or support team to reset your password.');
+                    return;
+                }
+                const phoneVal = emailInput.value.trim();
+                if (!phoneVal) {
+                    const errorMsg = document.getElementById('errorMsg');
+                    errorMsg.textContent = 'Please enter your phone number first.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                try {
+                    const data = await api.fetchWithAuth('/auth/forgot-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone: phoneVal })
+                    });
+                    alert('Your OTP is: ' + data.otp + ' (In production this would be sent via SMS)');
+                    document.getElementById('otpSection').classList.remove('hidden');
+                    document.getElementById('loginBtn').style.display = 'none';
+                    document.getElementById('errorMsg').classList.add('hidden');
+                    forgotLink._resetPhone = phoneVal;
+                } catch (err) {
+                    const errorMsg = document.getElementById('errorMsg');
+                    errorMsg.textContent = err.message;
+                    errorMsg.classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+                const otp = document.getElementById('otpInput').value.trim();
+                const phoneVal = forgotLink._resetPhone;
+                if (!otp || otp.length !== 6) {
+                    const errorMsg = document.getElementById('errorMsg');
+                    errorMsg.textContent = 'Please enter a valid 6-digit OTP.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                try {
+                    const data = await api.fetchWithAuth('/auth/verify-otp', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone: phoneVal, otp })
+                    });
+                    window.location.href = 'reset_password.html?token=' + data.resetToken;
+                } catch (err) {
+                    const errorMsg = document.getElementById('errorMsg');
+                    errorMsg.textContent = err.message;
+                    errorMsg.classList.remove('hidden');
+                }
             });
 
             toggleBtn.addEventListener('click', () => {

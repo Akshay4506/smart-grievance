@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: { type: String, enum: ['citizen', 'official'], default: 'citizen' },
     department: { type: String }, // For officials
-    phone: { type: String, unique: true, sparse: true }
+    phone: { type: String, unique: true, sparse: true },
+    resetOtp: { type: String },
+    resetOtpExpiry: { type: Date }
 }, { timestamps: true });
 
 // Hash password before saving

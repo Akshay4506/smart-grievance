@@ -136,4 +136,90 @@ router.put('/profile', protect, async (req, res) => {
     }
 });
 
+// @desc    Send OTP for password reset (mobile)
+// @route   POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) return res.status(400).json({ message: 'Phone number is required' });
+
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ message: 'No account found with this mobile number' });
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetOtp = otp;
+        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+        await user.save();
+
+        // In production, send OTP via SMS here (e.g. Twilio)
+        // For dev/testing, return OTP in response
+        res.json({ message: 'OTP sent successfully', otp });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { phone, otp } = req.body;
+        if (!phone || !otp) return res.status(400).json({ message: 'Phone and OTP are required' });
+
+        const user = await User.findOne({ phone });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        if (user.resetOtp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+        if (user.resetOtpExpiry < new Date()) {
+            return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+        }
+
+        // Generate a short-lived reset token (10 min)
+        const resetToken = jwt.sign(
+            { id: user._id, purpose: 'reset' },
+            process.env.JWT_SECRET || 'fallback_secret_key',
+            { expiresIn: '10m' }
+        );
+
+        // Clear OTP
+        user.resetOtp = undefined;
+        user.resetOtpExpiry = undefined;
+        await user.save();
+
+        res.json({ message: 'OTP verified', resetToken });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+        if (!token || !password) return res.status(400).json({ message: 'Token and new password are required' });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
+        if (decoded.purpose !== 'reset') {
+            return res.status(400).json({ message: 'Invalid reset token' });
+        }
+
+        const user = await User.findById(decoded.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.password = password;
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(400).json({ message: 'Reset link has expired. Please try again.' });
+        }
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

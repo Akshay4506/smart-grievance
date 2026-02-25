@@ -57,10 +57,11 @@ router.post('/login', async (req, res) => {
 
         // Build query: search by email or phone
         const query = email ? { email } : { phone };
+        const loginType = email ? 'email' : 'mobile';
         const user = await User.findOne(query);
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: `Invalid ${loginType} or password` });
         }
 
         if (role && user.role !== role) {
@@ -77,7 +78,7 @@ router.post('/login', async (req, res) => {
                 token: generateToken(user._id, user.role),
             });
         } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+            res.status(401).json({ message: `Invalid ${loginType} or password` });
         }
     } catch (error) {
         res.status(500).json({ message: error.message });

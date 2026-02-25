@@ -14,8 +14,8 @@ const citizens = [
 ];
 
 const officials = [
-    { name: 'Amit Singh', email: 'amit.roads@gov.in', password: 'admin', role: 'official', department: 'Roads Department' },
-    { name: 'Sneha Gupta', email: 'sneha.water@gov.in', password: 'admin', role: 'official', department: 'Water Department' }
+    { name: 'Amit Singh', email: 'amit.roads@gov.in', password: 'admin', role: 'official', department: 'Roads Department', phone: '9000000001' },
+    { name: 'Sneha Gupta', email: 'sneha.water@gov.in', password: 'admin', role: 'official', department: 'Water Department', phone: '9000000002' }
 ];
 
 const mockComplaints = [
@@ -70,15 +70,11 @@ const seedData = async () => {
         // Insert Users
         const createdCitizens = [];
         for (const c of citizens) {
-            const salt = await bcrypt.genSalt(10);
-            c.password = await bcrypt.hash(c.password, salt);
             const user = await User.create(c);
             createdCitizens.push(user);
         }
 
         for (const o of officials) {
-            const salt = await bcrypt.genSalt(10);
-            o.password = await bcrypt.hash(o.password, salt);
             await User.create(o);
         }
         console.log('Users seeded successfully');

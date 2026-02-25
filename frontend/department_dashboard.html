@@ -16,10 +16,44 @@
             margin-bottom: 3rem;
         }
 
+        .complaints-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
         @media (max-width: 900px) {
             .complaints-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        .view-toggle-group {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+        }
+
+        .view-toggle-btn {
+            background: none;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn:hover {
+            border-color: var(--color-text-main);
+            color: var(--color-text-main);
+        }
+
+        .view-toggle-btn.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
         }
 
         .complaints-status-header {
@@ -483,12 +517,34 @@
 
         <!-- Complaints View -->
         <div id="ticketsView" style="display: block;">
-            <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <select id="complaintStatusFilter" class="complaint-filter-select" onchange="renderComplaintCards()">
                     <option value="PENDING">Pending Complaints</option>
                     <option value="IN_PROGRESS">In Progress Complaints</option>
                     <option value="RESOLVED">Resolved Complaints</option>
                 </select>
+                <div class="view-toggle-group">
+                    <button class="view-toggle-btn active" id="gridViewBtn" title="Grid View" onclick="setView('grid')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </button>
+                    <button class="view-toggle-btn" id="listViewBtn" title="List View" onclick="setView('list')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div id="complaintsStatusHeader" class="complaints-status-header"></div>
             <div class="complaints-grid" id="complaintsGrid">
@@ -1670,6 +1726,21 @@
                 document.getElementById('profileDropdownMenu').classList.remove('active');
                 if (complaintId && window.openModal) {
                     window.openModal(complaintId);
+                }
+            };
+
+            window.setView = (mode) => {
+                const grid = document.getElementById('complaintsGrid');
+                const gridBtn = document.getElementById('gridViewBtn');
+                const listBtn = document.getElementById('listViewBtn');
+                if (mode === 'list') {
+                    grid.classList.add('list-view');
+                    listBtn.classList.add('active');
+                    gridBtn.classList.remove('active');
+                } else {
+                    grid.classList.remove('list-view');
+                    gridBtn.classList.add('active');
+                    listBtn.classList.remove('active');
                 }
             };
 

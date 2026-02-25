@@ -249,7 +249,8 @@
                         method: 'POST',
                         body: JSON.stringify({ phone: phoneVal, otp })
                     });
-                    window.location.href = 'reset_password.html?token=' + data.resetToken;
+                    localStorage.setItem('sg_reset_token', data.resetToken);
+                    window.location.href = 'reset_password.html';
                 } catch (err) {
                     const errorMsg = document.getElementById('errorMsg');
                     errorMsg.textContent = err.message;

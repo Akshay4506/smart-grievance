@@ -97,7 +97,7 @@
         <div class="card auth-card">
             <div class="auth-header">
                 <h1 id="authTitle">Official Login</h1>
-                <p id="authSubtitle">Login to manage department tickets</p>
+                <p id="authSubtitle">Login to manage department complaints</p>
             </div>
 
             <div id="errorMsg" class="error-msg hidden"></div>
@@ -168,7 +168,7 @@
                 isLogin = !isLogin;
                 document.getElementById('registerFields').classList.toggle('hidden', isLogin);
                 document.getElementById('authTitle').textContent = isLogin ? 'Official Login' : 'Register as Official';
-                document.getElementById('authSubtitle').textContent = isLogin ? 'Login to manage department tickets' : 'Sign up for a department account';
+                document.getElementById('authSubtitle').textContent = isLogin ? 'Login to manage department complaints' : 'Sign up for a department account';
                 document.getElementById('submitText').textContent = isLogin ? 'Login' : 'Complete Sign Up';
                 document.getElementById('toggleQuestion').textContent = isLogin ? "Don't have an official account?" : "Already have an account?";
                 document.getElementById('toggleModeBtn').textContent = isLogin ? 'Sign up' : 'Login';

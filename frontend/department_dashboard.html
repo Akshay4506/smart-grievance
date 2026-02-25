@@ -8,36 +8,49 @@
     <link rel="icon" type="image/svg+xml" href="logo.svg">
     <link rel="stylesheet" href="styles.css">
     <style>
-        .k-board {
-            display: flex;
-            gap: 1.5rem;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            align-items: flex-start;
-            margin-top: 2rem;
+        .complaints-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 1rem;
         }
 
-        .k-column {
-            flex: 1;
-            min-width: 320px;
-            background: var(--color-background);
+        @media (max-width: 900px) {
+            .complaints-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .complaints-status-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .complaints-status-header .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .complaints-status-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .complaint-filter-select {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
             border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            max-height: calc(100vh - 200px);
-        }
-
-        .k-cards-container {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 0.5rem 0.25rem 0.5rem 0.25rem;
-            margin: -0.5rem -0.25rem -0.5rem -0.25rem;
+            border-radius: var(--radius-sm);
+            background: var(--color-surface);
+            color: var(--color-text-main);
+            cursor: pointer;
+            font-weight: 600;
         }
 
         /* Custom scrollbar for Kanban */
@@ -190,19 +203,19 @@
     <main class="container" style="max-width: 1400px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0;">
             <div>
-                <h1>Task Board</h1>
+                <h1>Complaint Board</h1>
                 <p style="color: var(--color-text-muted);">Manage and update statuses for your department's incoming
-                    tickets.</p>
+                    complaints.</p>
             </div>
             <div>
                 <button class="btn btn-outline" onclick="loadComplaints()">Refresh Data</button>
             </div>
         </div>
 
-        <!-- Phase 7: Tab Navigation Expanded -->
+        <!-- Tab Navigation -->
         <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--color-border); margin-bottom: 2rem;">
             <button class="tab-btn" id="tabTickets" onclick="switchTab('tickets')"
-                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-primary); border-bottom: 3px solid var(--color-primary); cursor: pointer; margin-bottom: -2px;">Tickets</button>
+                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-primary); border-bottom: 3px solid var(--color-primary); cursor: pointer; margin-bottom: -2px;">Complaints</button>
             <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')"
                 style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-text-muted); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px;">Analytics</button>
             <button class="tab-btn" id="tabReports" onclick="switchTab('reports')"
@@ -218,7 +231,7 @@
                     style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
                     <div
                         style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="color: var(--color-text-main); margin: 0;">Ticket Trends</h3>
+                        <h3 style="color: var(--color-text-main); margin: 0;">Complaint Trends</h3>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
                             <label for="dateFilter" class="status-select"
                                 style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; margin: 0; padding-right: 0.25rem;">
@@ -326,11 +339,18 @@
             </div>
         </div>
 
-        <!-- Phase 6: Tickets Kanban View -->
+        <!-- Complaints View -->
         <div id="ticketsView" style="display: block;">
-            <div class="k-board" id="kanbanBoard">
-                <!-- Injected via JS -->
-                <p style="padding:2rem;">Loading data...</p>
+            <div style="margin-bottom: 1.5rem;">
+                <select id="complaintStatusFilter" class="complaint-filter-select" onchange="renderComplaintCards()">
+                    <option value="PENDING">Pending Complaints</option>
+                    <option value="IN_PROGRESS">In Progress Complaints</option>
+                    <option value="RESOLVED">Resolved Complaints</option>
+                </select>
+            </div>
+            <div id="complaintsStatusHeader" class="complaints-status-header"></div>
+            <div class="complaints-grid" id="complaintsGrid">
+                <p style="padding:2rem; grid-column: 1/-1;">Loading data...</p>
             </div>
         </div>
     </main>
@@ -663,83 +683,64 @@
 
                 ;
 
+            window.renderComplaintCards = () => {
+                const grid = document.getElementById('complaintsGrid');
+                const header = document.getElementById('complaintsStatusHeader');
+                const filterValue = document.getElementById('complaintStatusFilter').value;
+                const complaints = window.allComplaints || [];
+
+                const filtered = complaints.filter(c => c.status === filterValue);
+
+                const statusConfig = {
+                    PENDING: { label: 'Pending', color: 'var(--status-pending)', badge: 'badge-pending' },
+                    IN_PROGRESS: { label: 'In Progress', color: 'var(--status-progress)', badge: 'badge-progress' },
+                    RESOLVED: { label: 'Resolved', color: 'var(--status-resolved)', badge: 'badge-resolved' }
+                };
+
+                const conf = statusConfig[filterValue];
+
+                // Render status header with count
+                header.innerHTML = `
+                    <span class="status-dot" style="background-color: ${conf.color}; box-shadow: 0 0 6px ${conf.color};"></span>
+                    <h3>${conf.label} Complaints</h3>
+                    <span class="badge ${conf.badge}" style="border: 1px solid ${conf.color}; font-size: 0.85rem;">${filtered.length}</span>
+                `;
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align:center; padding: 3rem 1rem; color: var(--color-text-muted); font-size: 0.95rem; border: 2px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);">
+                            No ${conf.label.toLowerCase()} complaints found.
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = filtered.map(t => generateCard(t)).join('');
+            };
+
             window.loadComplaints = async () => {
-                const board = document.getElementById('kanbanBoard');
+                const grid = document.getElementById('complaintsGrid');
 
                 try {
-                    let tickets = await api.fetchWithAuth('/complaints/department');
+                    let complaints = await api.fetchWithAuth('/complaints/department');
 
                     // Sort descending by most recently updated
-                    tickets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                    complaints.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
-                    window.allComplaints = tickets;
+                    window.allComplaints = complaints;
 
-                    // Phase 5/6: Render Analytics only if tab is active
+                    // Render Analytics only if tab is active
                     const analysisView = document.getElementById('analysisView');
                     if (analysisView && analysisView.style.display === 'block') {
                         renderAnalytics();
                     }
 
-                    // Categorize
-                    const cols = {
-                        PENDING: [],
-                        IN_PROGRESS: [],
-                        RESOLVED: []
-                    }
+                    renderComplaintCards();
 
-                        ;
-
-                    tickets.forEach(t => {
-                        if (cols[t.status]) cols[t.status].push(t);
-                    });
-
-                    board.innerHTML = '';
-
-                    const statusConfig = {
-                        PENDING: {
-                            color: 'var(--status-pending)', badge: 'badge-pending'
-                        }
-
-                        ,
-                        IN_PROGRESS: {
-                            color: 'var(--status-progress)', badge: 'badge-progress'
-                        }
-
-                        ,
-                        RESOLVED: {
-                            color: 'var(--status-resolved)', badge: 'badge-resolved'
-                        }
-                    }
-
-                        ;
-
-                    Object.keys(cols).forEach(status => {
-                        let colTitle = status.replace('_', ' ');
-                        colTitle = colTitle.charAt(0) + colTitle.slice(1).toLowerCase(); // Title Case
-                        const conf = statusConfig[status];
-
-                        const emptyState = ` <div style="text-align:center; padding: 2rem 1rem; color: var(--color-text-muted); font-size: 0.9rem; border: 2px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);" > 🎉 No tickets here ! </div> `;
-
-                        const html = ` <div class="k-column" style="border-top: 4px solid ${conf.color};" > <div class="k-col-header" style="border-bottom: none; margin-bottom: 0.25rem;" > <span style="font-size: 1.05rem; display:flex; align-items:center; gap:0.5rem;" > <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${conf.color}; box-shadow: 0 0 4px ${conf.color};" ></span> ${colTitle}
-
-                        </span> <span class="badge ${conf.badge}" style="border: 1px solid ${conf.color};" >${cols[status].length}
-
-                        </span> </div> <div class="k-cards-container" > ${cols[status].length > 0 ? cols[status].map(t => generateCard(t)).join('') : emptyState}
-
-                        </div> </div> `;
-                        board.innerHTML += html;
-                    });
-
+                } catch (error) {
+                    grid.innerHTML = `<p style="padding:2rem; color: var(--status-critical); grid-column: 1/-1;">Failed to load complaints: ${error.message}</p>`;
                 }
-
-                catch (error) {
-                    board.innerHTML = `<p style="padding:2rem; color: var(--status-critical);" >Failed to load tickets: ${error.message}
-
-                </p>`;
-                }
-            }
-
-                ;
+            };
 
             // Phase 6 & 7: Tab Switching
             window.switchTab = (tab) => {
@@ -994,7 +995,7 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: `Tickets (${statusFilter})`,
+                            label: `Complaints (${statusFilter})`,
                             data: dataPoints,
                             borderColor: lineColor,
                             backgroundColor: lineColor + '33', // 20% opacity fill
@@ -1068,7 +1069,7 @@
                         data: {
                             labels: fixedLabels,
                             datasets: [{
-                                label: 'Number of Tickets',
+                                label: 'Number of Complaints',
                                 data: fixedData,
                                 backgroundColor: fixedColors,
                                 borderRadius: 6
@@ -1237,7 +1238,7 @@
                 const periodLabel = document.getElementById('reportPeriodFilter').options[document.getElementById('reportPeriodFilter').selectedIndex].text;
 
                 if (!window.allComplaints || window.allComplaints.length === 0) {
-                    alert('No tickets available to generate a report.');
+                    alert('No complaints available to generate a report.');
                     return;
                 }
 
@@ -1261,7 +1262,7 @@
                 });
 
                 if (filteredData.length === 0) {
-                    alert(`No tickets found for ${periodLabel}. Try expanding your search.`);
+                    alert(`No complaints found for ${periodLabel}. Try expanding your search.`);
                     return;
                 }
 

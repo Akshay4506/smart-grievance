@@ -1,9 +1,19 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Nodemailer transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD
+    }
+});
 
 // Generate JWT
 const generateToken = (id, role) => {
@@ -146,15 +156,53 @@ router.post('/forgot-password', async (req, res) => {
         const user = await User.findOne({ phone });
         if (!user) return res.status(404).json({ message: 'No account found with this mobile number' });
 
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOtp = otp;
-        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
         await user.save();
 
-        // In production, send OTP via SMS here (e.g. Twilio)
-        // For dev/testing, return OTP in response
+        // For dev/testing, return OTP in response (in production, send via SMS)
         res.json({ message: 'OTP sent successfully', otp });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Send OTP for password reset (email)
+// @route   POST /api/auth/forgot-password-email
+router.post('/forgot-password-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'No account found with this email' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.resetOtp = otp;
+        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        await user.save();
+
+        // Send OTP via email
+        await transporter.sendMail({
+            from: `"SG Track" <${process.env.SMTP_EMAIL}>`,
+            to: email,
+            subject: 'Password Reset OTP - SG Track',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <h2 style="color: #4f46e5; text-align: center;">SG Track</h2>
+                    <p>You requested a password reset. Use the OTP below to verify your identity:</p>
+                    <div style="text-align: center; margin: 1.5rem 0;">
+                        <span style="font-size: 2rem; font-weight: bold; letter-spacing: 0.5rem; color: #4f46e5; background: #f0f0ff; padding: 0.75rem 1.5rem; border-radius: 8px;">${otp}</span>
+                    </div>
+                    <p style="color: #666; font-size: 0.9rem;">This OTP is valid for <strong>5 minutes</strong>. If you didn't request this, please ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 1.5rem 0;">
+                    <p style="color: #999; font-size: 0.8rem; text-align: center;">© 2026 Smart Issue Tracker</p>
+                </div>
+            `
+        });
+
+        res.json({ message: 'OTP sent to your email successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -164,10 +212,11 @@ router.post('/forgot-password', async (req, res) => {
 // @route   POST /api/auth/verify-otp
 router.post('/verify-otp', async (req, res) => {
     try {
-        const { phone, otp } = req.body;
-        if (!phone || !otp) return res.status(400).json({ message: 'Phone and OTP are required' });
+        const { phone, email, otp } = req.body;
+        if ((!phone && !email) || !otp) return res.status(400).json({ message: 'Phone/Email and OTP are required' });
 
-        const user = await User.findOne({ phone });
+        const query = email ? { email } : { phone };
+        const user = await User.findOne(query);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         if (user.resetOtp !== otp) {

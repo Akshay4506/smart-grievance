@@ -58,6 +58,118 @@
             max-height: 70vh;
             overflow-y: auto;
         }
+
+        /* Notification styles */
+        .notif-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: 2px solid var(--color-surface);
+            box-shadow: 0 0 6px #22c55e;
+            animation: notifPulse 2s infinite;
+            display: none;
+        }
+
+        @keyframes notifPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 4px #22c55e;
+            }
+
+            50% {
+                box-shadow: 0 0 12px #22c55e;
+            }
+        }
+
+        .notif-item-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .notif-badge {
+            background: var(--color-primary);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 99px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .notif-panel {
+            display: none;
+            position: absolute;
+            right: 100%;
+            top: 0;
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin-right: 0.5rem;
+            z-index: 1001;
+        }
+
+        .notif-panel.active {
+            display: block;
+        }
+
+        .notif-panel-header {
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.9rem;
+        }
+
+        .notif-entry {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.85rem;
+        }
+
+        .notif-entry:hover {
+            background: var(--color-background);
+        }
+
+        .notif-entry .notif-title {
+            font-weight: 600;
+            color: var(--color-text-main);
+            margin-bottom: 0.2rem;
+        }
+
+        .notif-entry .notif-msg {
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+        }
+
+        .notif-entry .notif-meta {
+            color: var(--color-text-muted);
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .notif-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
     </style>
 
     <!-- Phase 7 Document Generators -->
@@ -94,9 +206,26 @@
                 </button>
                 <a href="citizen_dashboard.html" style="color: var(--color-text-main); font-weight: 600;">Dashboard</a>
                 <div class="profile-dropdown-container">
-                    <button class="profile-avatar" id="profileDropdownBtn">U</button>
+                    <button class="profile-avatar" id="profileDropdownBtn" style="position: relative;">
+                        U
+                        <span class="notif-dot" id="notifDot"></span>
+                    </button>
                     <div class="profile-dropdown-menu" id="profileDropdownMenu">
-
+                        <a href="#" id="notifToggleBtn" class="notif-item-link" onclick="toggleNotifPanel(event)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            Notifications
+                            <span class="notif-badge" id="notifCount" style="display:none;">0</span>
+                        </a>
+                        <div class="notif-panel" id="notifPanel">
+                            <div class="notif-panel-header">Notifications</div>
+                            <div id="notifList">
+                                <div class="notif-empty">No new notifications</div>
+                            </div>
+                        </div>
                         <a href="profile.html">View Profile</a>
                         <a href="#" id="logoutBtn">Logout</a>
                     </div>
@@ -281,7 +410,11 @@
 
             const avatarInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
             const profileBtn = document.getElementById('profileDropdownBtn');
-            if (profileBtn) profileBtn.textContent = avatarInitial;
+            if (profileBtn) {
+                const dot = profileBtn.querySelector('.notif-dot');
+                profileBtn.textContent = avatarInitial;
+                if (dot) profileBtn.appendChild(dot);
+            }
 
             document.getElementById('logoutBtn').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -646,6 +779,72 @@
                     renderPDF(null);
                 };
             };
+
+            // --- Notification System ---
+            let notificationsData = [];
+
+            async function loadNotifications() {
+                try {
+                    notificationsData = await api.fetchWithAuth('/notifications');
+                    renderNotifications();
+                } catch (e) { console.warn('Notifications unavailable:', e.message); }
+            }
+
+            function renderNotifications() {
+                const dot = document.getElementById('notifDot');
+                const badge = document.getElementById('notifCount');
+                const list = document.getElementById('notifList');
+                const count = notificationsData.length;
+
+                dot.style.display = count > 0 ? 'block' : 'none';
+                badge.style.display = count > 0 ? 'inline-block' : 'none';
+                badge.textContent = count;
+
+                if (count === 0) {
+                    list.innerHTML = '<div class="notif-empty">No new notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = notificationsData.map(n => {
+                    const icon = n.type === 'review' ? '⭐' : '💬';
+                    const timeAgo = getTimeAgo(new Date(n.createdAt));
+                    return `<div class="notif-entry" onclick="dismissNotification('${n._id}', '${n.complaintId}')">
+                        <div class="notif-title">${icon} ${n.complaintTitle || 'Complaint'}</div>
+                        <div class="notif-msg">${n.fromName}: ${n.message}</div>
+                        <div class="notif-meta"><span>${n.type === 'review' ? 'Review' : 'Comment'}</span><span>${timeAgo}</span></div>
+                    </div>`;
+                }).join('');
+            }
+
+            function getTimeAgo(date) {
+                const diff = Math.floor((Date.now() - date) / 1000);
+                if (diff < 60) return 'Just now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+                return Math.floor(diff / 86400) + 'd ago';
+            }
+
+            window.toggleNotifPanel = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('notifPanel').classList.toggle('active');
+            };
+
+            window.dismissNotification = async (notifId, complaintId) => {
+                try {
+                    await api.fetchWithAuth(`/notifications/${notifId}`, { method: 'DELETE' });
+                } catch (e) { /* ignore */ }
+                notificationsData = notificationsData.filter(n => n._id !== notifId);
+                renderNotifications();
+                document.getElementById('notifPanel').classList.remove('active');
+                document.getElementById('profileDropdownMenu').classList.remove('active');
+                if (complaintId && window.openModal) {
+                    window.openModal(complaintId);
+                }
+            };
+
+            loadNotifications();
+            setInterval(loadNotifications, 30000);
         });
     </script>
 </body>

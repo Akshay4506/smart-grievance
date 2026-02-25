@@ -1,5 +1,6 @@
 const express = require('express');
 const Complaint = require('../models/Complaint');
+const Notification = require('../models/Notification');
 const { protect, officialOnly } = require('../middleware/auth');
 const router = express.Router();
 
@@ -161,7 +162,8 @@ router.post('/:id/comments', protect, async (req, res) => {
 
         if (!complaint) return res.status(404).json({ message: 'Complaint not found' });
 
-        const author = await require('../models/User').findById(req.user.id);
+        const User = require('../models/User');
+        const author = await User.findById(req.user.id);
 
         const comment = {
             text,
@@ -172,6 +174,38 @@ router.post('/:id/comments', protect, async (req, res) => {
 
         complaint.comments.push(comment);
         await complaint.save();
+
+        // Create notifications for the opposite party
+        const preview = text.length > 60 ? text.substring(0, 60) + '...' : text;
+        const fromName = author ? author.name : 'Someone';
+
+        if (req.user.role === 'citizen') {
+            // Notify officials of this department
+            const officials = await User.find({
+                role: 'official',
+                department: complaint.departmentAssigned
+            });
+            const notifs = officials.map(o => ({
+                userId: o._id,
+                complaintId: complaint._id,
+                type: 'comment',
+                message: preview,
+                fromName,
+                complaintTitle: complaint.title
+            }));
+            if (notifs.length > 0) await Notification.insertMany(notifs);
+        } else {
+            // Notify the citizen who filed the complaint
+            await Notification.create({
+                userId: complaint.citizenId,
+                complaintId: complaint._id,
+                type: 'comment',
+                message: preview,
+                fromName,
+                complaintTitle: complaint.title
+            });
+        }
+
         res.status(201).json(complaint.comments);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -223,6 +257,24 @@ router.post('/:id/review', protect, async (req, res) => {
         };
 
         await complaint.save();
+
+        // Notify officials of this department about the review
+        const User = require('../models/User');
+        const author = await User.findById(req.user.id);
+        const officials = await User.find({
+            role: 'official',
+            department: complaint.departmentAssigned
+        });
+        const notifs = officials.map(o => ({
+            userId: o._id,
+            complaintId: complaint._id,
+            type: 'review',
+            message: `${rating}★ — ${feedback ? (feedback.length > 50 ? feedback.substring(0, 50) + '...' : feedback) : 'No feedback'}`,
+            fromName: author ? author.name : 'A citizen',
+            complaintTitle: complaint.title
+        }));
+        if (notifs.length > 0) await Notification.insertMany(notifs);
+
         res.json(complaint.review);
     } catch (error) {
         res.status(500).json({ message: error.message });

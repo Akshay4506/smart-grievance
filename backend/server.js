@@ -12,9 +12,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Routes
 const authRoutes = require('./routes/auth');
 const complaintRoutes = require('./routes/complaints');
+const notificationRoutes = require('./routes/notifications');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/smart-grievance';

@@ -6,19 +6,27 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Nodemailer transporter
+// Nodemailer transporter - Refined for Localhost & Cloud
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 uses SSL
+    port: 587,
+    secure: false, // Port 587 uses STARTTLS
     auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
     },
-    // Force IPv4 to avoid ENETUNREACH issues on cloud providers
-    family: 4,
-    debug: true,
-    logger: true
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+});
+
+// Verify connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('Nodemailer verification failed:', error.message);
+    } else {
+        console.log('Nodemailer is ready to send emails');
+    }
 });
 
 // Generate JWT
@@ -174,43 +182,64 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
-// @desc    Send OTP for password reset (email)
-// @route   POST /api/auth/forgot-password-email
+// @desc    Send OTP for password reset (email) - Rewritten for reliability
 router.post('/forgot-password-email', async (req, res) => {
+    const { email } = req.body;
+    console.log(`Password reset request for email: ${email}`);
+
     try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ message: 'Email is required' });
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
 
         const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: 'No account found with this email' });
+        if (!user) {
+            console.log(`User not found for email: ${email}`);
+            return res.status(404).json({ message: 'No account found with this email' });
+        }
 
+        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOtp = otp;
-        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+        user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
         await user.save();
 
-        // Send OTP via email
-        await transporter.sendMail({
+        console.log(`Generated OTP for ${email}: ${otp}`);
+
+        // Prepare Email
+        const mailOptions = {
             from: `"SG Track" <${process.env.SMTP_EMAIL}>`,
             to: email,
             subject: 'Password Reset OTP - SG Track',
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 2rem; border: 1px solid #e0e0e0; border-radius: 8px;">
-                    <h2 style="color: #4f46e5; text-align: center;">SG Track</h2>
-                    <p>You requested a password reset. Use the OTP below to verify your identity:</p>
-                    <div style="text-align: center; margin: 1.5rem 0;">
-                        <span style="font-size: 2rem; font-weight: bold; letter-spacing: 0.5rem; color: #4f46e5; background: #f0f0ff; padding: 0.75rem 1.5rem; border-radius: 8px;">${otp}</span>
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 2rem; border: 1px solid #eee; border-radius: 12px; background-color: #ffffff;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h1 style="color: #4f46e5; margin: 0;">SG Track</h1>
+                        <p style="color: #64748b; font-size: 0.9rem;">Smart Grievance Tracking System</p>
                     </div>
-                    <p style="color: #666; font-size: 0.9rem;">This OTP is valid for <strong>5 minutes</strong>. If you didn't request this, please ignore this email.</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 1.5rem 0;">
-                    <p style="color: #999; font-size: 0.8rem; text-align: center;">© 2026 Smart Issue Tracker</p>
+                    <div style="background-color: #f8fafc; padding: 2rem; border-radius: 8px; text-align: center;">
+                        <p style="margin-top: 0; color: #1e293b;">Use the following OTP to reset your password:</p>
+                        <h2 style="font-size: 2.5rem; letter-spacing: 0.5rem; color: #4f46e5; margin: 1rem 0;">${otp}</h2>
+                        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0;">This OTP is valid for 5 minutes.</p>
+                    </div>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-top: 2rem; text-align: center;">
+                        If you didn't request a password reset, please ignore this email or contact support.
+                    </p>
+                    <div style="border-top: 1px solid #eee; margin-top: 2rem; padding-top: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.8rem;">
+                        &copy; 2026 SG Track. All rights reserved.
+                    </div>
                 </div>
             `
-        });
+        };
+
+        // Send Email
+        await transporter.sendMail(mailOptions);
+        console.log(`Successfully sent OTP email to: ${email}`);
 
         res.json({ message: 'OTP sent to your email successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error in forgot-password-email:', error);
+        res.status(500).json({ message: 'Error sending email. Please try again later.' });
     }
 });
 

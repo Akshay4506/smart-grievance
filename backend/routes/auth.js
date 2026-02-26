@@ -6,18 +6,22 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Nodemailer transporter - Refined for Localhost & Cloud
+// Nodemailer transporter - Optimized for Cloud Deployment (Render)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Port 587 uses STARTTLS
+    port: 465,
+    secure: true, // Use SSL
     auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
     },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    // Force IPv4 to avoid common cloud networking "ENETUNREACH" or timeout issues
+    family: 4,
+    connectionTimeout: 15000, // Increase timeout to 15s
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    debug: true, // Enable debug output in Render logs
+    logger: true  // Log information to console
 });
 
 // Verify connection on startup

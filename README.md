@@ -1,46 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smart Grievance System
 
-Run Frontend
+## Project Overview
 
-npx serve .
+The **Smart Grievance System** is a full-stack web application designed to simplify and digitize the grievance submission and resolution process. It enables users to register complaints online and track their status while providing administrators with tools to manage and resolve issues efficiently.
 
-*****
+This system reflects a real-world grievance redressal platform suitable for institutions, organizations, communities, or public services.
 
-Run Backend
+---
 
-node server.js
+## Project Objectives
 
-## Getting Started
+* Provide an easy-to-use interface for grievance submission
+* Enable transparent tracking of complaint status
+* Offer administrative tools for managing and resolving complaints
+* Improve accountability and efficiency in issue resolution
+* Demonstrate practical implementation of full-stack development
 
-First, run the development server:
+---
+
+## What the Project Does
+
+The Smart Grievance System allows:
+
+* Users to submit grievances through an online form
+* Users to view and track complaint status
+* Administrators to review and update grievance records
+* Organized storage of complaints in a database
+* Secure user authentication and access control (if implemented)
+
+---
+
+## Technologies Used
+
+* **Frontend:** HTML, CSS, JavaScript
+* **Backend:** Node.js / Express.js
+* **Database:** MongoDB / SQL-based database
+* **API Communication:** RESTful APIs
+* **Authentication:** JWT / Session-based (if implemented)
+
+---
+
+## Installation & Execution
+
+## Running the Backend
+
+1. Navigate to the backend folder:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Start the backend server:
 
-## Learn More
+```bash
+node server.js
+```
 
-To learn more about Next.js, take a look at the following resources:
+The backend will run on:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+http://localhost:5000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Running the Frontend
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Open a new terminal and navigate to the frontend folder:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start the frontend application:
+
+```bash
+npx serve .
+```
+
+The frontend will usually be available at:
+
+```
+http://localhost:3000
+```
+
+---
+
+## Key Features
+
+* Online grievance submission
+* Complaint tracking system
+* Administrative control panel
+* Secure login system
+* Database-backed storage
+* Real-time status updates
+
+---

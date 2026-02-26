@@ -158,17 +158,6 @@
 
                 <div class="auth-links" id="authLinks">
                     <span class="toggle-link" id="loginMobileToggle">Login with Mobile</span>
-                    <span class="toggle-link" id="forgotPasswordLink">Forgot Password</span>
-                </div>
-
-                <div id="otpSection" class="hidden" style="margin-bottom: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label" for="otpInput">Enter OTP</label>
-                        <input type="text" id="otpInput" class="form-input" placeholder="Enter 6-digit OTP"
-                            maxlength="6">
-                    </div>
-                    <button type="button" class="btn btn-primary" style="width: 100%;" id="verifyOtpBtn">Verify
-                        OTP</button>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
@@ -207,7 +196,6 @@
             const emailLabel = emailInput.previousElementSibling;
             const authLinksRow = document.getElementById('authLinks');
             const mobileToggle = document.getElementById('loginMobileToggle');
-            const forgotLink = document.getElementById('forgotPasswordLink');
 
             mobileToggle.addEventListener('click', () => {
                 loginWithMobile = !loginWithMobile;
@@ -227,100 +215,7 @@
                 emailInput.value = '';
             });
 
-            // --- Forgot Password Flow (Rewritten) ---
-            forgotLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const errorMsg = document.getElementById('errorMsg');
-                const successMsg = document.getElementById('successMsg');
-                const loadingIndicator = document.getElementById('loadingIndicator');
 
-                errorMsg.classList.add('hidden');
-                successMsg.classList.add('hidden');
-
-                const identifier = emailInput.value.trim();
-                if (!identifier) {
-                    errorMsg.textContent = `Please enter your ${loginWithMobile ? 'phone number' : 'email'} first.`;
-                    errorMsg.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    console.log(`Initiating forgot password for: ${identifier} (Mode: ${loginWithMobile ? 'Mobile' : 'Email'})`);
-                    loadingIndicator.classList.remove('hidden');
-                    forgotLink.style.pointerEvents = 'none';
-
-                    const endpoint = loginWithMobile ? '/auth/forgot-password' : '/auth/forgot-password-email';
-                    const payload = loginWithMobile ? { phone: identifier } : { email: identifier };
-
-                    const data = await api.fetchWithAuth(endpoint, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-
-                    console.log('OTP request successful:', data);
-
-                    if (loginWithMobile) {
-                        alert(`Your OTP is: ${data.otp} (In production this would be sent via SMS)`);
-                        forgotLink._resetPhone = identifier;
-                        forgotLink._resetMode = 'phone';
-                    } else {
-                        forgotLink._resetEmail = identifier;
-                        forgotLink._resetMode = 'email';
-                    }
-
-                    document.getElementById('otpSection').classList.remove('hidden');
-                    document.getElementById('loginBtn').style.display = 'none';
-
-                    successMsg.textContent = `OTP sent to ${identifier}. ${loginWithMobile ? 'Check your messages.' : 'Check your inbox.'}`;
-                    successMsg.classList.remove('hidden');
-
-                } catch (err) {
-                    console.error('Forgot password error:', err);
-                    errorMsg.textContent = err.message;
-                    errorMsg.classList.remove('hidden');
-                } finally {
-                    loadingIndicator.classList.add('hidden');
-                    forgotLink.style.pointerEvents = 'auto';
-                }
-            });
-
-            document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
-                const otp = document.getElementById('otpInput').value.trim();
-                const errorMsg = document.getElementById('errorMsg');
-                const successMsg = document.getElementById('successMsg');
-
-                errorMsg.classList.add('hidden');
-                successMsg.classList.add('hidden');
-
-                if (!otp || otp.length !== 6) {
-                    errorMsg.textContent = 'Please enter a valid 6-digit OTP.';
-                    errorMsg.classList.remove('hidden');
-                    return;
-                }
-
-                try {
-                    console.log(`Verifying OTP: ${otp} for ${forgotLink._resetMode} reset`);
-                    const payload = { otp };
-                    if (forgotLink._resetMode === 'email') {
-                        payload.email = forgotLink._resetEmail;
-                    } else {
-                        payload.phone = forgotLink._resetPhone;
-                    }
-
-                    const data = await api.fetchWithAuth('/auth/verify-otp', {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-
-                    console.log('OTP verification successful. Reset token received.');
-                    localStorage.setItem('sg_reset_token', data.resetToken);
-                    window.location.href = 'reset_password.html';
-                } catch (err) {
-                    console.error('OTP verification error:', err);
-                    errorMsg.textContent = err.message;
-                    errorMsg.classList.remove('hidden');
-                }
-            });
 
             toggleBtn.addEventListener('click', () => {
                 isLogin = !isLogin;

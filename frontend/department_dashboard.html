@@ -32,6 +32,13 @@
             align-items: center;
         }
 
+        @media (max-width: 600px) {
+            .view-toggle-group {
+                display: none;
+                /* User requested: remove grid/list buttons on mobile */
+            }
+        }
+
         .view-toggle-btn {
             background: none;
             border: 1px solid var(--color-border);
@@ -88,7 +95,31 @@
             font-weight: 600;
         }
 
-        /* Custom scrollbar for Kanban */
+        /* New responsive header classes */
+        .dashboard-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                margin: 1.5rem 0;
+            }
+
+            .dashboard-header-actions {
+                width: 100%;
+            }
+
+            .dashboard-header-actions .btn {
+                width: 100%;
+            }
+        }
+
         .k-cards-container::-webkit-scrollbar {
             width: 6px;
         }
@@ -377,13 +408,13 @@
     </nav>
 
     <main class="container" style="max-width: 1400px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0;">
+        <div class="dashboard-header-row">
             <div>
                 <h1>Complaint Board</h1>
                 <p style="color: var(--color-text-muted);">Manage and update statuses for your department's incoming
                     complaints.</p>
             </div>
-            <div>
+            <div class="dashboard-header-actions">
                 <button class="btn btn-outline" onclick="loadComplaints()">Refresh Data</button>
             </div>
         </div>

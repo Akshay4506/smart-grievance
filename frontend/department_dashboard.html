@@ -23,6 +23,7 @@
         @media (max-width: 900px) {
             .complaints-grid {
                 grid-template-columns: 1fr;
+                width: 100%;
             }
         }
 
@@ -131,6 +132,57 @@
         .k-cards-container::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--color-border);
+            margin-bottom: 2rem;
+            width: 100%;
+            overflow-x: auto;
+            /* Fallback for very small screens */
+            scrollbar-width: none;
+            /* Hide scrollbar in Firefox */
+        }
+
+        .tabs-container::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar in Chrome/Safari */
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        @media (max-width: 600px) {
+            .tabs-container {
+                gap: 0;
+            }
+
+            .tab-btn {
+                padding: 0.75rem 0.25rem;
+                font-size: 0.8rem;
+                flex: 1;
+                text-align: center;
+                min-width: 80px;
+                /* Ensure buttons are clickable */
+            }
         }
 
         .k-col-header {
@@ -420,13 +472,10 @@
         </div>
 
         <!-- Tab Navigation -->
-        <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--color-border); margin-bottom: 2rem;">
-            <button class="tab-btn" id="tabTickets" onclick="switchTab('tickets')"
-                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-primary); border-bottom: 3px solid var(--color-primary); cursor: pointer; margin-bottom: -2px;">Complaints</button>
-            <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')"
-                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-text-muted); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px;">Analytics</button>
-            <button class="tab-btn" id="tabReports" onclick="switchTab('reports')"
-                style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; color: var(--color-text-muted); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -2px;">Reports</button>
+        <div class="tabs-container">
+            <button class="tab-btn active" id="tabTickets" onclick="switchTab('tickets')">Complaints</button>
+            <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')">Analytics</button>
+            <button class="tab-btn" id="tabReports" onclick="switchTab('reports')">Reports</button>
         </div>
 
         <!-- Phase 5/6: Analytics View -->
@@ -474,7 +523,7 @@
                             </select>
                         </div>
                     </div>
-                    <div style="width: 100%; height: 350px; position: relative;">
+                    <div style="width: 100%; height: 350px; position: relative; max-width: 100%; overflow: hidden;">
                         <canvas id="timeSeriesChart"></canvas>
                     </div>
                 </div>

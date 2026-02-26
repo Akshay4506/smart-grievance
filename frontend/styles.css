@@ -275,6 +275,14 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .nav-brand {
+        font-size: 1.1rem;
+        /* Slightly smaller for mobile room */
+    }
 }
 
 .nav-brand-logo {
@@ -294,12 +302,19 @@ a:hover {
 
 @media (max-width: 600px) {
     .nav-links {
-        gap: 0.75rem;
+        gap: 0.4rem;
     }
 
-    .nav-links a:not(.profile-avatar) {
+    /* Hide non-essential top-level links on mobile navbar, but KEEP map.html */
+    .nav-links>a:not([href="map.html"]) {
         display: none;
-        /* Hide non-essential links on mobile navbar */
+    }
+
+    /* Ensure the Public Map link is visible but has smaller font if needed */
+    .nav-links>a[href="map.html"] {
+        display: block;
+        font-size: 0.8rem;
+        white-space: nowrap;
     }
 }
 
@@ -394,6 +409,15 @@ a:hover {
     transform: translateY(-10px);
     transition: all 0.2s ease;
     z-index: 1000;
+}
+
+@media (max-width: 600px) {
+    .profile-dropdown-menu {
+        right: 0;
+        min-width: 160px;
+        transform: translateY(0);
+        /* Better placement on mobile */
+    }
 }
 
 .profile-dropdown-menu.active {

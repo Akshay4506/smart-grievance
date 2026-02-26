@@ -973,6 +973,13 @@
 
                 const filtered = complaints.filter(c => c.status === filterValue);
 
+                // Sort PENDING and IN_PROGRESS complaints by age (Oldest first), others (RESOLVED) by latest first
+                if (filterValue === 'PENDING' || filterValue === 'IN_PROGRESS') {
+                    filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                } else {
+                    filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                }
+
                 const statusConfig = {
                     PENDING: { label: 'Pending', color: 'var(--status-pending)', badge: 'badge-pending' },
                     IN_PROGRESS: { label: 'In Progress', color: 'var(--status-progress)', badge: 'badge-progress' },

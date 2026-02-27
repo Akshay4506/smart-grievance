@@ -473,7 +473,7 @@
 
         <!-- Tab Navigation -->
         <div class="tabs-container">
-            <button class="tab-btn active" id="tabTickets" onclick="switchTab('tickets')">Complaints</button>
+            <button class="tab-btn active" id="tabComplaints" onclick="switchTab('complaints')">Complaints</button>
             <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')">Analytics</button>
             <button class="tab-btn" id="tabReports" onclick="switchTab('reports')">Reports</button>
         </div>
@@ -596,7 +596,7 @@
         </div>
 
         <!-- Complaints View -->
-        <div id="ticketsView" style="display: block;">
+        <div id="complaintsView" style="display: block;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <select id="complaintStatusFilter" class="complaint-filter-select" onchange="renderComplaintCards()">
                     <option value="PENDING">Pending Complaints</option>
@@ -853,7 +853,7 @@
 
                 // Phase 5: Comments Logic
                 window.renderComments(c);
-                window.currentOpenTicketId = id;
+                window.currentOpenComplaintId = id;
                 document.getElementById('postCommentBtn').onclick = () => postComment(c._id);
 
                 document.getElementById('newCommentInput').onkeyup = (e) => {
@@ -878,19 +878,19 @@
                 ;
 
             // Phase 5: Comments Rendering
-            window.renderComments = (ticket) => {
+            window.renderComments = (complaint) => {
                 const timeline = document.getElementById('commentsTimeline');
                 const count = document.getElementById('commentCount');
 
-                if (!ticket.comments || ticket.comments.length === 0) {
+                if (!complaint.comments || complaint.comments.length === 0) {
                     count.textContent = '0';
                     timeline.innerHTML = `<div style="text-align:center; padding: 1rem; color: var(--color-text-muted); font-style: italic; font-size: 0.85rem;" >No comments yet.</div>`;
                     return;
                 }
 
-                count.textContent = ticket.comments.length;
+                count.textContent = complaint.comments.length;
 
-                timeline.innerHTML = ticket.comments.map(comment => {
+                timeline.innerHTML = complaint.comments.map(comment => {
                     const isSelf = comment.user === user._id;
                     const bubbleColor = isSelf ? 'var(--color-primary)' : 'var(--color-surface)';
                     const textColor = isSelf ? '#fff' : 'var(--color-text-main)';
@@ -901,7 +901,7 @@
                     }).replace(/\//g, '-').toUpperCase();
 
                     let fallbackName = 'Citizen';
-                    if (comment.role === 'citizen' && ticket.citizenId && ticket.citizenId.name) fallbackName = ticket.citizenId.name;
+                    if (comment.role === 'citizen' && complaint.citizenId && complaint.citizenId.name) fallbackName = complaint.citizenId.name;
 
                     let displayName = comment.name && comment.name !== 'undefined' ? comment.name : (comment.role === 'official' ? 'Official' : fallbackName);
                     if (isSelf) displayName = 'You';
@@ -1033,11 +1033,11 @@
 
             // Phase 6 & 7: Tab Switching
             window.switchTab = (tab) => {
-                const ticketsBtn = document.getElementById('tabTickets');
+                const complaintsBtn = document.getElementById('tabComplaints');
                 const analysisBtn = document.getElementById('tabAnalysis');
                 const reportsBtn = document.getElementById('tabReports');
 
-                const ticketsView = document.getElementById('ticketsView');
+                const complaintsView = document.getElementById('complaintsView');
                 const analysisView = document.getElementById('analysisView');
                 const reportsView = document.getElementById('reportsView');
 
@@ -1053,33 +1053,33 @@
                     btn.style.borderBottom = '3px solid transparent';
                 };
 
-                if (tab === 'tickets') {
-                    ticketsView.style.display = 'block';
+                if (tab === 'complaints') {
+                    complaintsView.style.display = 'block';
                     analysisView.style.display = 'none';
                     reportsView.style.display = 'none';
 
-                    setActiveStyle(ticketsBtn);
+                    setActiveStyle(complaintsBtn);
                     setInactiveStyle(analysisBtn);
                     setInactiveStyle(reportsBtn);
                 } else if (tab === 'analysis') {
-                    ticketsView.style.display = 'none';
+                    complaintsView.style.display = 'none';
                     analysisView.style.display = 'block';
                     reportsView.style.display = 'none';
 
                     setActiveStyle(analysisBtn);
-                    setInactiveStyle(ticketsBtn);
+                    setInactiveStyle(complaintsBtn);
                     setInactiveStyle(reportsBtn);
 
                     // Phase 6: Ensure sub-filters and charts are primed when switching tabs
                     updateSubFilters();
                     renderAnalytics();
                 } else if (tab === 'reports') {
-                    ticketsView.style.display = 'none';
+                    complaintsView.style.display = 'none';
                     analysisView.style.display = 'none';
                     reportsView.style.display = 'block';
 
                     setActiveStyle(reportsBtn);
-                    setInactiveStyle(ticketsBtn);
+                    setInactiveStyle(complaintsBtn);
                     setInactiveStyle(analysisBtn);
 
                     if (document.getElementById('reportPeriodFilter').options.length === 0) {
@@ -1136,10 +1136,10 @@
                 const statusFilter = document.getElementById('statusFilter').value;
                 const dateFilterValue = document.getElementById('dateFilter').value;
 
-                let tickets = window.allComplaints || [];
+                let complaints = window.allComplaints || [];
 
                 if (statusFilter !== 'RECEIVED') {
-                    tickets = tickets.filter(t => t.status === statusFilter);
+                    complaints = complaints.filter(t => t.status === statusFilter);
                 }
 
                 const refDate = dateFilterValue ? new Date(dateFilterValue) : new Date();
@@ -1219,8 +1219,8 @@
                     }
                 }
 
-                // --- MAP TICKET DATA TO GENERATED BUCKETS ---
-                tickets.forEach(t => {
+                // --- MAP COMPLAINT DATA TO GENERATED BUCKETS ---
+                complaints.forEach(t => {
                     const d = new Date(t.createdAt || t.updatedAt || new Date());
                     let key = null;
 
@@ -1405,16 +1405,16 @@
 
                 ;
 
-            const generateCard = (ticket) => {
+            const generateCard = (complaint) => {
 
                 // Dropdown to update status
-                const statusDropdown = ` <select class="status-select" onchange="updateStatus('${ticket._id}', this.value)" style="box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid var(--color-border); background: var(--color-background);"${ticket.status === 'RESOLVED' ? 'disabled' : ''}
+                const statusDropdown = ` <select class="status-select" onchange="updateStatus('${complaint._id}', this.value)" style="box-shadow: var(--shadow-sm); cursor: pointer; border: 1px solid var(--color-border); background: var(--color-background);"${complaint.status === 'RESOLVED' ? 'disabled' : ''}
 
-            > <option value="PENDING"${ticket.status === 'PENDING' ? 'selected' : ''}
+            > <option value="PENDING"${complaint.status === 'PENDING' ? 'selected' : ''}
 
-            >Pending</option> <option value="IN_PROGRESS"${ticket.status === 'IN_PROGRESS' ? 'selected' : ''}
+            >Pending</option> <option value="IN_PROGRESS"${complaint.status === 'IN_PROGRESS' ? 'selected' : ''}
 
-            >In Progress</option> <option value="RESOLVED"${ticket.status === 'RESOLVED' ? 'selected' : ''}
+            >In Progress</option> <option value="RESOLVED"${complaint.status === 'RESOLVED' ? 'selected' : ''}
 
             >Resolved</option> </select> `;
 
@@ -1422,35 +1422,35 @@
                 let sevBg = 'var(--color-background)';
                 let sevBorder = 'var(--color-border)';
 
-                if (ticket.severity.toLowerCase() === 'medium') {
+                if (complaint.severity.toLowerCase() === 'medium') {
                     sevColor = '#d97706';
                     sevBg = '#fef3c7';
                     sevBorder = '#fbbf24';
                 }
 
-                else if (ticket.severity.toLowerCase() === 'high') {
+                else if (complaint.severity.toLowerCase() === 'high') {
                     sevColor = '#c2410c';
                     sevBg = '#ffedd5';
                     sevBorder = '#fdba74';
                 }
 
-                else if (ticket.severity.toLowerCase() === 'critical') {
+                else if (complaint.severity.toLowerCase() === 'critical') {
                     sevColor = '#b91c1c';
                     sevBg = '#fee2e2';
                     sevBorder = '#fca5a5';
                 }
 
-                return ` <div class="k-card" style="cursor: pointer;" onclick="openModal('${ticket._id}', event)" > <div class="k-card-top" style="align-items: center; margin-bottom: 0.25rem;" > <span class="k-id" style="font-weight: 600; font-size: 0.8rem; color: var(--color-primary);" >#${ticket._id.slice(-6).toUpperCase()}
+                return ` <div class="k-card" style="cursor: pointer;" onclick="openModal('${complaint._id}', event)" > <div class="k-card-top" style="align-items: center; margin-bottom: 0.25rem;" > <span class="k-id" style="font-weight: 600; font-size: 0.8rem; color: var(--color-primary);" >#${complaint._id.slice(-6).toUpperCase()}
 
             </span> ${statusDropdown}
 
-            </div> <h4 class="k-title" style="margin-bottom: 0.25rem;" >${ticket.title}
+            </div> <h4 class="k-title" style="margin-bottom: 0.25rem;" >${complaint.title}
 
-            </h4> <p class="k-desc" >${ticket.description}
+            </h4> <p class="k-desc" >${complaint.description}
 
-            </p> <div style="font-size:0.75rem; color:var(--color-text-muted); display:flex; gap:0.5rem; margin-top: 0.5rem; align-items:center;" > <span style="display:flex; align-items:center; gap:0.2rem;" >📍 ${ticket.location?.address ? ticket.location.address.split(',')[0] : 'Location N/A'}
+            </p> <div style="font-size:0.75rem; color:var(--color-text-muted); display:flex; gap:0.5rem; margin-top: 0.5rem; align-items:center;" > <span style="display:flex; align-items:center; gap:0.2rem;" >📍 ${complaint.location?.address ? complaint.location.address.split(',')[0] : 'Location N/A'}
 
-            </span> </div> <div class="k-footer" style="margin-top: 0.75rem; padding-top: 0.75rem;" > <span class="badge" style="background:${sevBg}; border:1px solid ${sevBorder}; color:${sevColor};" >${ticket.severity}
+            </span> </div> <div class="k-footer" style="margin-top: 0.75rem; padding-top: 0.75rem;" > <span class="badge" style="background:${sevBg}; border:1px solid ${sevBorder}; color:${sevColor};" >${complaint.severity}
 
             </span> </div> </div> `;
             }
@@ -1531,7 +1531,7 @@
                     return;
                 }
 
-                // 1. Filter tickets locally based on selected period
+                // 1. Filter complaints locally based on selected period
                 let filteredData = [];
                 window.allComplaints.forEach(t => {
                     const tDate = new Date(t.createdAt || t.updatedAt || new Date());

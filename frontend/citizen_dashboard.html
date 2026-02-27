@@ -496,7 +496,7 @@
                 // Phase 5: Comments Logic
                 window.renderComments(c);
 
-                window.currentOpenTicketId = id;
+                window.currentOpenComplaintId = id;
                 document.getElementById('postCommentBtn').onclick = () => postComment(c._id);
                 document.getElementById('newCommentInput').onkeyup = (e) => {
                     if (e.key === 'Enter') postComment(c._id);
@@ -549,18 +549,18 @@
             });
 
             // Comments Logic
-            window.renderComments = (ticket) => {
+            window.renderComments = (complaint) => {
                 const timeline = document.getElementById('commentsTimeline');
                 const count = document.getElementById('commentCount');
 
-                if (!ticket.comments || ticket.comments.length === 0) {
+                if (!complaint.comments || complaint.comments.length === 0) {
                     count.textContent = '0';
                     timeline.innerHTML = `<div style="text-align:center; padding: 1rem; color: var(--color-text-muted); font-style: italic; font-size: 0.85rem;">No comments yet.</div>`;
                     return;
                 }
 
-                count.textContent = ticket.comments.length;
-                timeline.innerHTML = ticket.comments.map(comment => {
+                count.textContent = complaint.comments.length;
+                timeline.innerHTML = complaint.comments.map(comment => {
                     const isSelf = comment.user === user._id;
                     const bubbleColor = isSelf ? 'var(--color-primary)' : 'var(--color-surface)';
                     const textColor = isSelf ? '#fff' : 'var(--color-text-main)';

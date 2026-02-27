@@ -1,0 +1,17 @@
+{
+    "name": "Smart Grievance Tracking System",
+    "short_name": "SG Track",
+    "description": "Progressive Web App for managing smart grievances.",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#2563eb",
+    "icons": [
+        {
+            "src": "logo.svg",
+            "sizes": "144x144 192x192 512x512 any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

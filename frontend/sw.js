@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sg-track-v3';
+const CACHE_NAME = 'sg-track-v4';
 const urlsToCache = [
     '/',
     '/index.html',
     '/styles.css',
     '/logo.svg',
+    '/app-icon.svg',
     '/manifest.json'
 ];
 

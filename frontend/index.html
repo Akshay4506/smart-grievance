@@ -98,6 +98,15 @@
         SG Track
       </a>
       <div class="nav-links">
+        <button class="install-pwa-btn" aria-label="Install App">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="install-text">Install App</span>
+        </button>
         <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
           <svg id="themeIconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
@@ -115,15 +124,6 @@
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
-        </button>
-        <button class="install-pwa-btn" aria-label="Install App">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Install App
         </button>
         <div id="navLinks" style="display: flex; gap: 1.5rem; align-items: center;">
           <!-- Injected via JS -->
@@ -199,6 +199,9 @@
       const navLinks = document.getElementById('navLinks');
 
       if (user) {
+        const installText = document.querySelector('.install-text');
+        if (installText) installText.style.display = 'none';
+
         const portalArea = document.getElementById('portalArea');
         if (portalArea) {
           portalArea.innerHTML = `<div style="display: flex; gap: 1rem; justify-content: center;"><a href="${user.role === 'official' ? 'department_dashboard.html' : 'citizen_dashboard.html'}" class="btn btn-primary">Go to Dashboard</a><a href="map.html" class="btn btn-outline">View Public Map</a></div>`;

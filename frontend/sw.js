@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sg-track-v2';
+const CACHE_NAME = 'sg-track-v3';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -8,6 +8,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+    self.skipWaiting(); // Force the waiting service worker to become the active service worker
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
@@ -18,13 +19,20 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then(response => {
-                // Cache hit - return response
-                if (response) {
-                    return response;
+                // Cache the latest version
+                if (response && response.status === 200 && response.type === 'basic') {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
                 }
-                return fetch(event.request);
+                return response;
+            })
+            .catch(() => {
+                // Network failed (e.g., localhost IPv6 issue or offline), fallback to cache
+                return caches.match(event.request);
             })
     );
 });

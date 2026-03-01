@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /citizen_dashboard.html
+Disallow: /department_dashboard.html
+Disallow: /profile.html
+
+# Host
+Host: https://smart-grievance-ak.vercel.app

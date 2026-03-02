@@ -1172,23 +1172,35 @@
                             dataMap[key] = 0;
                         }
                     } else if (subTimeframe === 'half_yearly') {
-                        labels = ['H1 (Jan-Jun)', 'H2 (Jul-Dec)'];
+                        // half-yearly for the last three years (refYear - 2 to refYear)
+                        for (let i = refYear - 2; i <= refYear; i++) {
+                            labels.push(`${i} H1 (Jan-Jun)`);
+                            labels.push(`${i} H2 (Jul-Dec)`);
+                        }
                         labels.forEach(l => dataMap[l] = 0);
                     } else if (subTimeframe === 'quarterly') {
-                        labels = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+                        // quarterly for current and previous year
+                        for (let i = refYear - 1; i <= refYear; i++) {
+                            labels.push(`${i} Q1`);
+                            labels.push(`${i} Q2`);
+                            labels.push(`${i} Q3`);
+                            labels.push(`${i} Q4`);
+                        }
                         labels.forEach(l => dataMap[l] = 0);
                     }
                 }
                 else if (timeframe === 'month') {
                     if (subTimeframe === 'monthly') {
                         // All 12 months of refYear
-                        for (let i = 1; i <= 12; i++) {
-                            const key = `${refYear}-${i.toString().padStart(2, '0')}`;
+                        const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        for (let i = 0; i < 12; i++) {
+                            const key = `${mNames[i]} ${refYear}`;
                             labels.push(key);
                             dataMap[key] = 0;
                         }
                     } else if (subTimeframe === 'half_monthly') {
-                        labels = [`${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (1st-15th)`, `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (16th-End)`];
+                        const monthName = refDate.toLocaleString('default', { month: 'short' });
+                        labels = [`${monthName} 1-15`, `${monthName} 16-End`];
                         labels.forEach(l => dataMap[l] = 0);
                     } else if (subTimeframe === 'weekly') {
                         labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
@@ -1196,23 +1208,22 @@
                     }
                 }
                 else if (timeframe === 'week') {
-                    // Week-wise > Weekly basis (Show 7 days of the reference date's week)
-                    const dayOfWeek = refDate.getDay(); // 0 is Sunday
-                    const diff = refDate.getDate() - dayOfWeek;
-                    const sunday = new Date(refYear, refMonth, diff);
-
+                    // Monday through Sunday of the current week (refDate's week)
+                    let dayOfWeek = refDate.getDay();
+                    if (dayOfWeek === 0) dayOfWeek = 7; // make Sun 7
+                    const mondayDiff = refDate.getDate() - dayOfWeek + 1;
+                    const monday = new Date(refYear, refMonth, mondayDiff);
                     for (let i = 0; i < 7; i++) {
-                        const d = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + i);
+                        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
                         const key = toLocalISODate(d);
                         labels.push(key);
                         dataMap[key] = 0;
                     }
                 }
                 else if (timeframe === 'day') {
-                    // Day by Day: All dates of the selected month
-                    const daysInMonth = new Date(refYear, refMonth + 1, 0).getDate();
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const d = new Date(refYear, refMonth, i);
+                    // Rolling window showing exactly the last 7 days
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date(refYear, refMonth, refDate.getDate() - i);
                         const key = toLocalISODate(d);
                         labels.push(key);
                         dataMap[key] = 0;
@@ -1224,46 +1235,49 @@
                     const d = new Date(t.createdAt || t.updatedAt || new Date());
                     let key = null;
 
-                    // Filter processing scope
-                    if (timeframe === 'year') {
-                        if (subTimeframe !== 'yearly' && d.getFullYear() !== refYear) return;
-                    } else if (timeframe === 'month') {
-                        if (d.getFullYear() !== refYear) return;
-                        if (subTimeframe === 'half_monthly' && d.getMonth() !== refMonth) return;
-                    } else if (timeframe === 'week' || timeframe === 'day') {
-                        // Restrict specifically to chosen month+year
-                        if (d.getFullYear() !== refYear || d.getMonth() !== refMonth) return;
-                    }
-
                     if (timeframe === 'year') {
                         if (subTimeframe === 'yearly') {
                             key = d.getFullYear().toString();
                         } else if (subTimeframe === 'half_yearly') {
-                            const m = d.getMonth() + 1;
-                            key = m <= 6 ? 'H1 (Jan-Jun)' : 'H2 (Jul-Dec)';
+                            if (d.getFullYear() >= refYear - 2 && d.getFullYear() <= refYear) {
+                                const m = d.getMonth() + 1;
+                                key = m <= 6 ? `${d.getFullYear()} H1 (Jan-Jun)` : `${d.getFullYear()} H2 (Jul-Dec)`;
+                            }
                         } else if (subTimeframe === 'quarterly') {
-                            const m = d.getMonth() + 1;
-                            if (m <= 3) key = 'Q1 (Jan-Mar)';
-                            else if (m <= 6) key = 'Q2 (Apr-Jun)';
-                            else if (m <= 9) key = 'Q3 (Jul-Sep)';
-                            else key = 'Q4 (Oct-Dec)';
+                            if (d.getFullYear() >= refYear - 1 && d.getFullYear() <= refYear) {
+                                const m = d.getMonth() + 1;
+                                if (m <= 3) key = `${d.getFullYear()} Q1`;
+                                else if (m <= 6) key = `${d.getFullYear()} Q2`;
+                                else if (m <= 9) key = `${d.getFullYear()} Q3`;
+                                else key = `${d.getFullYear()} Q4`;
+                            }
                         }
                     }
                     else if (timeframe === 'month') {
                         if (subTimeframe === 'monthly') {
-                            const m = d.getMonth() + 1;
-                            key = `${refYear}-${m.toString().padStart(2, '0')}`;
+                            if (d.getFullYear() === refYear) {
+                                const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                key = `${mNames[d.getMonth()]} ${refYear}`;
+                            }
                         } else if (subTimeframe === 'half_monthly') {
-                            const day = d.getDate();
-                            key = day <= 15 ? `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (1st-15th)` : `${refYear}-${(refMonth + 1).toString().padStart(2, '0')} (16th-End)`;
+                            if (d.getFullYear() === refYear && d.getMonth() === refMonth) {
+                                const monthName = refDate.toLocaleString('default', { month: 'short' });
+                                const day = d.getDate();
+                                key = day <= 15 ? `${monthName} 1-15` : `${monthName} 16-End`;
+                            }
                         } else if (subTimeframe === 'weekly') {
-                            const day = d.getDate();
-                            const w = Math.ceil(day / 7);
-                            key = `Week ${w > 5 ? 5 : w}`;
+                            if (d.getFullYear() === refYear && d.getMonth() === refMonth) {
+                                const day = d.getDate();
+                                const w = Math.ceil(day / 7);
+                                key = `Week ${w > 5 ? 5 : w}`;
+                            }
                         }
                     }
                     else if (timeframe === 'week' || timeframe === 'day') {
-                        key = toLocalISODate(d); // Matches the pre-generated discrete dates
+                        const dIso = toLocalISODate(d);
+                        if (dataMap.hasOwnProperty(dIso)) {
+                            key = dIso;
+                        }
                     }
 
                     if (key && dataMap.hasOwnProperty(key)) {

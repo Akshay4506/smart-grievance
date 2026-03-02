@@ -1282,7 +1282,16 @@
                 timeChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        labels: labels.map(l => {
+                            if (timeframe === 'day' || timeframe === 'week') {
+                                const [y, m, d] = l.split('-');
+                                const dateObj = new Date(y, m - 1, d);
+                                if (!isNaN(dateObj)) {
+                                    return dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+                                }
+                            }
+                            return l;
+                        }),
                         datasets: [{
                             label: `Complaints (${statusFilter})`,
                             data: dataPoints,

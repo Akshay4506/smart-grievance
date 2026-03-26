@@ -36,7 +36,7 @@ The Smart Grievance System allows:
 * **Backend:** Node.js / Express.js
 * **Database:** MongoDB / SQL-based database
 * **API Communication:** RESTful APIs
-* **Authentication:** JWT / Session-based (if implemented)
+* **Authentication:** JWT / Session-based
 
 ---
 

@@ -26,7 +26,7 @@ The Smart Grievance System allows:
 * Users to view and track complaint status
 * Administrators to review and update grievance records
 * Organized storage of complaints in a database
-* Secure user authentication and access control (if implemented)
+* Secure user authentication and access control
 
 ---
 

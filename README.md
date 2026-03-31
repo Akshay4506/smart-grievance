@@ -108,3 +108,7 @@ http://localhost:3000
 * Real-time status updates
 
 ---
+
+## 📄 License
+
+This project is licensed under the MIT - see the [LICENSE](LICENSE) file for details.

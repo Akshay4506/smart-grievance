@@ -26,7 +26,7 @@ The Smart Grievance System allows:
 * Users to view and track complaint status
 * Administrators to review and update grievance records
 * Organized storage of complaints in a database
-* Secure user authentication and access control (if implemented)
+* Secure user authentication and access control
 
 ---
 
@@ -36,7 +36,7 @@ The Smart Grievance System allows:
 * **Backend:** Node.js / Express.js
 * **Database:** MongoDB / SQL-based database
 * **API Communication:** RESTful APIs
-* **Authentication:** JWT / Session-based (if implemented)
+* **Authentication:** JWT / Session-based
 
 ---
 
@@ -108,3 +108,7 @@ http://localhost:3000
 * Real-time status updates
 
 ---
+
+## 📄 License
+
+This project is licensed under the MIT - see the [LICENSE](LICENSE) file for details.

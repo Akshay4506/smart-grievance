@@ -1,6 +1,8 @@
 const express = require('express');
+const crypto = require('crypto');
 const Complaint = require('../models/Complaint');
 const Notification = require('../models/Notification');
+const User = require('../models/User'); // Added User model
 const { protect, officialOnly } = require('../middleware/auth');
 const router = express.Router();
 
@@ -48,11 +50,19 @@ function analyzeText(text) {
     };
 }
 
+// Hierarchical Assignment Logic Removed - Replaced with Hash Matching
+
 // @desc    Create a new complaint
 // @route   POST /api/complaints
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, description, lng, lat, address, category, severity, evidence } = req.body;
+        let { title, description, lng, lat, address, category, severity, evidence, state, district, mandal, village, ward } = req.body;
+
+        if (state) state = state.toLowerCase();
+        if (district) district = district.toLowerCase();
+        if (mandal) mandal = mandal.toLowerCase();
+        if (village) village = village.toLowerCase();
+        if (ward) ward = ward.toLowerCase();
 
         const analysis = analyzeText(`${title} ${description}`);
         const finalSeverity = severity || analysis.severity;
@@ -64,6 +74,9 @@ router.post('/', protect, async (req, res) => {
 
         const slaDeadline = new Date(Date.now() + slaHours * 60 * 60 * 1000);
 
+        const rawStr = `${state || ''}${district || ''}${mandal || ''}${village || ''}${ward || ''}`.replace(/\s+/g, '');
+        const locationHash = crypto.createHash('sha256').update(rawStr).digest('hex');
+
         const complaint = await Complaint.create({
             title,
             description,
@@ -73,9 +86,15 @@ router.post('/', protect, async (req, res) => {
             slaDeadline,
             evidence,
             citizenId: req.user.id,
+            state,
+            district,
+            mandal,
+            village,
+            ward,
+            locationHash,
             location: {
                 type: 'Point',
-                coordinates: [lng || 77.2090, lat || 28.6139], // Default to Delhi if missing
+                coordinates: [lng || 77.2090, lat || 28.6139], // Default if missing
                 address: address || 'Location not provided'
             }
         });
@@ -113,13 +132,7 @@ router.get('/me', protect, async (req, res) => {
 // @route   GET /api/complaints/department
 router.get('/department', protect, officialOnly, async (req, res) => {
     try {
-        const user = await require('../models/User').findById(req.user.id);
-        let query = {};
-
-        // If the official has a specific department, filter by it, otherwise show all
-        if (user.department && user.department !== 'All') {
-            query.departmentAssigned = user.department;
-        }
+        let query = { locationHash: req.user.locationHash };
 
         const complaints = await Complaint.find(query).populate('citizenId', 'name email phone').sort('status slaDeadline');
         res.json(complaints);

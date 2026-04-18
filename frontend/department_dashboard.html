@@ -446,7 +446,10 @@
                             <span class="notif-badge" id="notifCount" style="display:none;">0</span>
                         </a>
                         <div class="notif-panel" id="notifPanel">
-                            <div class="notif-panel-header">Notifications</div>
+                            <div class="notif-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Notifications</span>
+                                <button onclick="clearAllNotifications()" style="background: none; border: none; color: var(--color-primary); font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Clear All</button>
+                            </div>
                             <div id="notifList">
                                 <div class="notif-empty">No new notifications</div>
                             </div>
@@ -633,6 +636,12 @@
         </div>
     </main>
 
+    <!-- Full screen image viewer overlay -->
+    <div id="imageViewerOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; cursor:zoom-out;" onclick="this.style.display='none'">
+        <img id="imageViewerImg" src="" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+        <div style="position:absolute; top:20px; right:30px; color:white; font-size:2.5rem; font-weight:bold;">&times;</div>
+    </div>
+
     <!-- Complaint Details Modal -->
     <div class="modal-overlay" id="complaintModal">
         <div class="modal-content">
@@ -658,6 +667,10 @@
                     <div>
                         <div class="modal-label">Title</div>
                         <div class="modal-value" id="modalTitle">--</div>
+                    </div>
+                    <div>
+                        <div class="modal-label">Category (Department)</div>
+                        <div class="modal-value" id="modalDepartment">--</div>
                     </div>
                     <div>
                         <div class="modal-label">Status</div>
@@ -790,6 +803,8 @@
                 else if (c.status === 'RESOLVED') statusSpan.classList.add('badge-resolved');
                 else statusSpan.classList.add('badge-pending');
 
+                document.getElementById('modalDepartment').textContent = c.departmentAssigned || c.category || '--';
+
                 const resolvedBlock = document.getElementById('modalResolvedBlock');
                 if (c.status === 'RESOLVED' && c.resolvedAt) {
                     const rDate = new Date(c.resolvedAt);
@@ -842,6 +857,11 @@
                     c.evidence.forEach(base64 => {
                         const img = document.createElement('img');
                         img.src = base64;
+                        img.style.cursor = 'zoom-in';
+                        img.onclick = () => {
+                            document.getElementById('imageViewerImg').src = base64;
+                            document.getElementById('imageViewerOverlay').style.display = 'flex';
+                        };
                         gallery.appendChild(img);
                     });
                     evContainer.style.display = 'block';
@@ -1836,6 +1856,17 @@
                 document.getElementById('profileDropdownMenu').classList.remove('active');
                 if (complaintId && window.openModal) {
                     window.openModal(complaintId);
+                }
+            };
+
+            window.clearAllNotifications = async () => {
+                if(notificationsData.length === 0) return;
+                try {
+                    await api.fetchWithAuth('/notifications', { method: 'DELETE' });
+                    notificationsData = [];
+                    renderNotifications();
+                } catch (err) {
+                    console.log('Failed to clear notifications', err);
                 }
             };
 

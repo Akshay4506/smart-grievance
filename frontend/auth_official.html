@@ -134,15 +134,38 @@
                     </div>
                     <input type="hidden" id="role" value="official">
 
-                    <div class="form-group" id="deptGroup">
-                        <label class="form-label" for="department">Select Department</label>
-                        <select id="department" class="form-select">
-                            <option value="Roads">Roads / Potholes</option>
-                            <option value="Water">Water / Plumbing</option>
-                            <option value="Electricity">Electricity</option>
-                            <option value="Waste">Waste / Garbage</option>
-                            <option value="General">General / Other</option>
+                    <div class="form-group" id="cadreGroup">
+                        <label class="form-label" for="cadre">Cadre / Authority Level</label>
+                        <select id="cadre" class="form-select">
+                            <option value="" disabled selected>Select level</option>
+                            <option value="state">State Level</option>
+                            <option value="district">District Level</option>
+                            <option value="mandal">Mandal / Tehsil Level</option>
+                            <option value="village">Village Level</option>
+                            <option value="ward">Ward Level</option>
                         </select>
+                    </div>
+                    <div id="jurisdictionContainer" style="display: none; flex-direction: column; gap: 1rem; border-left: 2px solid var(--color-primary); padding-left: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group" id="groupState">
+                            <label class="form-label" for="locState">State</label>
+                            <input type="text" id="locState" class="form-input" placeholder="Enter State">
+                        </div>
+                        <div class="form-group" id="groupDistrict" style="display:none; margin-bottom:0;">
+                            <label class="form-label" for="locDistrict">District</label>
+                            <input type="text" id="locDistrict" class="form-input" placeholder="Enter District">
+                        </div>
+                        <div class="form-group" id="groupMandal" style="display:none; margin-bottom:0;">
+                            <label class="form-label" for="locMandal">Mandal</label>
+                            <input type="text" id="locMandal" class="form-input" placeholder="Enter Mandal / Tehsil">
+                        </div>
+                        <div class="form-group" id="groupVillage" style="display:none; margin-bottom:0;">
+                            <label class="form-label" for="locVillage">Village</label>
+                            <input type="text" id="locVillage" class="form-input" placeholder="Enter Village">
+                        </div>
+                        <div class="form-group" id="groupWard" style="display:none; margin-bottom:0;">
+                            <label class="form-label" for="locWard">Ward</label>
+                            <input type="text" id="locWard" class="form-input" placeholder="Enter Ward">
+                        </div>
                     </div>
                 </div>
 
@@ -182,6 +205,8 @@
 
     <script src="api.js"></script>
     <script>
+        // Scripts for Auth
+
         document.addEventListener('DOMContentLoaded', () => {
             const user = api.getUser();
             if (user) {
@@ -196,6 +221,41 @@
             const emailLabel = emailInput.previousElementSibling;
             const authLinksRow = document.getElementById('authLinks');
             const mobileToggle = document.getElementById('loginMobileToggle');
+
+            // --- CASCADING DROPDOWNS LOGIC ---
+            const cadreSelect = document.getElementById('cadre');
+            const jurisContainer = document.getElementById('jurisdictionContainer');
+            const selects = {
+                state: document.getElementById('locState'),
+                district: document.getElementById('locDistrict'),
+                mandal: document.getElementById('locMandal'),
+                village: document.getElementById('locVillage'),
+                ward: document.getElementById('locWard')
+            };
+            const groups = {
+                state: document.getElementById('groupState'),
+                district: document.getElementById('groupDistrict'),
+                mandal: document.getElementById('groupMandal'),
+                village: document.getElementById('groupVillage'),
+                ward: document.getElementById('groupWard')
+            };
+
+            cadreSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (!val) {
+                    jurisContainer.style.display = 'none';
+                    return;
+                }
+                jurisContainer.style.display = 'flex';
+                // Always show State
+                groups.state.style.display = 'block';
+                // Show others based on level
+                groups.district.style.display = ['district', 'mandal', 'village', 'ward'].includes(val) ? 'block' : 'none';
+                groups.mandal.style.display = ['mandal', 'village', 'ward'].includes(val) ? 'block' : 'none';
+                groups.village.style.display = ['village', 'ward'].includes(val) ? 'block' : 'none';
+                groups.ward.style.display = ['ward'].includes(val) ? 'block' : 'none';
+            });
+            // ------------------------------------
 
             mobileToggle.addEventListener('click', () => {
                 loginWithMobile = !loginWithMobile;
@@ -253,7 +313,18 @@
                 if (!isLogin) {
                     payload.name = document.getElementById('name').value;
                     payload.phone = document.getElementById('phone').value;
-                    payload.department = document.getElementById('department').value;
+                    
+                    const cadre = document.getElementById('cadre').value;
+                    if (!cadre) return errorMsg.textContent = 'Please select a Cadre', errorMsg.classList.remove('hidden');
+                    
+                    payload.cadre = cadre;
+                    payload.jurisdiction = {
+                        state: document.getElementById('locState').value,
+                        district: document.getElementById('locDistrict').value,
+                        mandal: document.getElementById('locMandal').value,
+                        village: document.getElementById('locVillage').value,
+                        ward: document.getElementById('locWard').value
+                    };
                 }
 
                 try {

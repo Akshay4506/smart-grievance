@@ -6,9 +6,26 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['citizen', 'official'], default: 'citizen' },
-    department: { type: String }, // For officials
-    phone: { type: String, unique: true, sparse: true }
+    phone: { type: String, unique: true, sparse: true },
+    
+    // Official role specifics
+    cadre: { 
+        type: String, 
+        enum: ['state', 'district', 'mandal', 'village', 'ward'] 
+    },
+    jurisdiction: {
+        state: { type: String },
+        district: { type: String },
+        mandal: { type: String },
+        village: { type: String },
+        ward: { type: String }
+    },
+    locationHash: { type: String, index: true }
 }, { timestamps: true });
+
+// Optimize lookups during complaint routing
+userSchema.index({ cadre: 1 });
+userSchema.index({ 'jurisdiction.state': 1, 'jurisdiction.district': 1, 'jurisdiction.mandal': 1, 'jurisdiction.village': 1, 'jurisdiction.ward': 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function () {

@@ -1,13 +1,15 @@
 const jwt = require('jsonwebtoken');
 
-const protect = (req, res, next) => {
+const User = require('../models/User');
+
+const protect = async (req, res, next) => {
     let token;
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
-            req.user = decoded; // { id, role }
+            req.user = await User.findById(decoded.id || decoded._id).select('-password');
             next();
         } catch (error) {
             console.error(error);

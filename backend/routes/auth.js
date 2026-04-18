@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
@@ -16,11 +17,39 @@ const generateToken = (id, role) => {
 // @route   POST /api/auth/register
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role, department, phone } = req.body;
+        const { name, email, password, role, cadre, jurisdiction, phone } = req.body;
+
+        if (jurisdiction && typeof jurisdiction === 'object') {
+            for (let key in jurisdiction) {
+                if (typeof jurisdiction[key] === 'string') {
+                    jurisdiction[key] = jurisdiction[key].toLowerCase();
+                }
+            }
+        }
 
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
+        }
+
+        // Validate cadre and jurisdiction for officials
+        if (role === 'official') {
+            if (!cadre || !['state', 'district', 'mandal', 'village', 'ward'].includes(cadre)) {
+                return res.status(400).json({ message: 'Valid cadre is required for officials' });
+            }
+            if (!jurisdiction || !jurisdiction.state) {
+                return res.status(400).json({ message: 'State jurisdiction is required' });
+            }
+            if (cadre !== 'state' && !jurisdiction.district) return res.status(400).json({ message: 'District jurisdiction is required for this cadre' });
+            if (['mandal', 'village', 'ward'].includes(cadre) && !jurisdiction.mandal) return res.status(400).json({ message: 'Mandal jurisdiction is required for this cadre' });
+            if (['village', 'ward'].includes(cadre) && !jurisdiction.village) return res.status(400).json({ message: 'Village jurisdiction is required' });
+            if (cadre === 'ward' && !jurisdiction.ward) return res.status(400).json({ message: 'Ward jurisdiction is required' });
+        }
+
+        let locationHash;
+        if (role === 'official' && jurisdiction) {
+            const rawStr = `${jurisdiction.state || ''}${jurisdiction.district || ''}${jurisdiction.mandal || ''}${jurisdiction.village || ''}${jurisdiction.ward || ''}`.replace(/\s+/g, '');
+            locationHash = crypto.createHash('sha256').update(rawStr).digest('hex');
         }
 
         const user = await User.create({
@@ -28,7 +57,9 @@ router.post('/register', async (req, res) => {
             email,
             password,
             role,
-            department,
+            cadre,
+            jurisdiction,
+            locationHash,
             phone
         });
 
@@ -38,7 +69,7 @@ router.post('/register', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                department: user.department,
+                cadre: user.cadre,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -74,7 +105,8 @@ router.post('/login', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                department: user.department,
+                cadre: user.cadre,
+                jurisdiction: user.jurisdiction,
                 token: generateToken(user._id, user.role),
             });
         } else {
@@ -125,7 +157,8 @@ router.put('/profile', protect, async (req, res) => {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 role: updatedUser.role,
-                department: updatedUser.department,
+                cadre: updatedUser.cadre,
+                jurisdiction: updatedUser.jurisdiction,
                 token: generateToken(updatedUser._id, updatedUser.role),
             });
         } else {

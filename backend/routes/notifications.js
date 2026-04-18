@@ -16,6 +16,17 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
+// @desc    Clear all notifications
+// @route   DELETE /api/notifications
+router.delete('/', protect, async (req, res) => {
+    try {
+        await Notification.deleteMany({ userId: req.user.id });
+        res.json({ message: 'All notifications cleared' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Dismiss (delete) a single notification
 // @route   DELETE /api/notifications/:id
 router.delete('/:id', protect, async (req, res) => {

@@ -25,6 +25,17 @@ const complaintSchema = new mongoose.Schema({
         address: { type: String }
     },
 
+    // Hierarchical Routing Geography
+    state: { type: String, required: true },
+    district: { type: String, required: true },
+    mandal: { type: String, required: true },
+    village: { type: String },
+    ward: { type: String },
+
+    // Assigned Official Routing
+    locationHash: { type: String, index: true },
+
+
     // Phase 5: Advanced Features
     upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [{

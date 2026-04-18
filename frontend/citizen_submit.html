@@ -136,6 +136,11 @@
                     </div>
 
                     <div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label" for="address">Approximate Address (Optional)</label>
+                            <input type="text" id="address" class="form-input" placeholder="E.g., Near City Center Mall...">
+                        </div>
+
                         <div class="form-group">
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
@@ -152,9 +157,28 @@
                         <input type="hidden" id="lat" value="28.6139"> <!-- Default New Delhi -->
                         <input type="hidden" id="lng" value="77.2090">
 
-                        <div class="form-group">
-                            <label class="form-label" for="address">Approximate Address</label>
-                            <input type="text" id="address" class="form-input" placeholder="E.g., 14 MG Road" required>
+                        <div id="jurisdictionContainer" style="display: flex; flex-direction: column; gap: 1rem; border-left: 2px solid var(--color-primary); padding-left: 1rem; margin-top: 1rem;">
+                            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0;">Provide Complaint Jurisdiction (Required)</p>
+                            <div class="form-group" id="groupState">
+                                <label class="form-label" for="locState">State</label>
+                                <input type="text" id="locState" class="form-input" placeholder="Enter State" required>
+                            </div>
+                            <div class="form-group" id="groupDistrict">
+                                <label class="form-label" for="locDistrict">District</label>
+                                <input type="text" id="locDistrict" class="form-input" placeholder="Enter District" required>
+                            </div>
+                            <div class="form-group" id="groupMandal">
+                                <label class="form-label" for="locMandal">Mandal / Tehsil</label>
+                                <input type="text" id="locMandal" class="form-input" placeholder="Enter Mandal" required>
+                            </div>
+                            <div class="form-group" id="groupVillage">
+                                <label class="form-label" for="locVillage">Village</label>
+                                <input type="text" id="locVillage" class="form-input" placeholder="Enter Village (Optional)">
+                            </div>
+                            <div class="form-group" id="groupWard">
+                                <label class="form-label" for="locWard">Ward</label>
+                                <input type="text" id="locWard" class="form-input" placeholder="Enter Ward (Optional)">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -176,6 +200,8 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="api.js"></script>
     <script>
+        // Scripts for Citizen Submit
+
         document.addEventListener('DOMContentLoaded', () => {
             const user = api.getUser();
             if (!user || user.role !== 'citizen') {
@@ -328,6 +354,11 @@
                     severity: document.getElementById('severity').value || undefined,
                     description: document.getElementById('description').value,
                     address: document.getElementById('address').value,
+                    state: document.getElementById('locState').value,
+                    district: document.getElementById('locDistrict').value,
+                    mandal: document.getElementById('locMandal').value,
+                    village: document.getElementById('locVillage').value,
+                    ward: document.getElementById('locWard').value,
                     lat: parseFloat(document.getElementById('lat').value),
                     lng: parseFloat(document.getElementById('lng').value),
                     evidence: evidenceArray

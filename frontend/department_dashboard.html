@@ -1502,11 +1502,16 @@
 
             // Expose to window for the inline select onchange event
             window.updateStatus = async (id, newStatus) => {
+                if (newStatus === 'RESOLVED') {
+                    const confirmed = confirm("Do you want to change status to resolved? Once resolved, it can't be reverted back.");
+                    if (!confirmed) {
+                        loadComplaints(); // reset UI dropdown
+                        return;
+                    }
+                }
+
                 try {
-                    await api.fetchWithAuth(`/complaints/${id}
-
-                    `, {
-
+                    await api.fetchWithAuth(`/complaints/${id}`, {
                         method: 'PATCH',
                         body: JSON.stringify({
                             status: newStatus
@@ -1514,7 +1519,6 @@
                     });
                     loadComplaints(); // refresh board
                 }
-
                 catch (err) {
                     alert('Failed to update status');
                     loadComplaints(); // reset UI

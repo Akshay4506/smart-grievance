@@ -109,6 +109,31 @@ http://localhost:3000
 
 ---
 
+## Project File Structure & Pipeline
+
+```text
+smart-grievance/
+├── backend/                # Node.js Express API & MongoDB Models
+│   ├── middleware/         # Security (JWT) and Upload Middlewares
+│   ├── models/             # Mongoose Schemas (User, Complaint, Notification)
+│   ├── routes/             # API Endpoints
+│   ├── .env                # Environment Variables
+│   └── server.js           # Server Entry Point
+├── frontend/               # Vanilla JS PWA Client
+│   ├── api.js              # Global API Fetch Logic (Singleton)
+│   ├── index.html          # Landing Page
+│   ├── citizen_*.html      # Citizen Dashboards & Forms
+│   ├── department_*.html   # Official Dashboards
+│   ├── map.html            # Public Transparency Map
+│   ├── styles.css          # Vanilla CSS Design System
+│   └── sw.js / pwa.js      # Progressive Web App Configuration
+├── interview_qa.txt        # Technical Documentation & Interview Prep
+└── README.md               # Main Project Documentation
+```
+
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT - see the [LICENSE](LICENSE) file for details.
